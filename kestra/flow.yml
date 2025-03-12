@@ -1,0 +1,14 @@
+id: villedemontreal_ingestion
+namespace: vdemtl_jobspostul
+description: |
+  Ingestion of CSV data from the Donnees ouvertes de la Ville de Montreal site on job postings and applications into GCS
+
+variables:
+  file: "vdmtl_jobdata_{{ trigger.date | date('yyyy-MM-dd') }}.csv"
+  gcs_file: "gs://{{ secret('GCP_BUCKET_NAME') }}/{{ vars.file }}"
+  this_table_name: "{{ secret('GCP_DATASET') }}.{{}}"// finish
+
+triggers:
+  - id: schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 6 * * 3"

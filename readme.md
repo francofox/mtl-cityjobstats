@@ -1,5 +1,5 @@
 # Montreal City Job Stats (Statistiques de postulation des offres d'emploi de la Ville de Montréal)
-This project uses the data from the [Montréal Open Data site (Données ouvertes de la Ville de Montréal)](https://donnees.montreal.ca) on their [SimenLigne]() Oracle job posting system. This data is available here:
+This project uses the data from the [Montréal Open Data site (Données ouvertes de la Ville de Montréal)](https://donnees.montreal.ca) on their SimenLigne Oracle job posting system. This data is available here:
 https://donnees.montreal.ca/dataset/offres-demploi-et-postulation
 
 This project is a capstone project in the DataTalksClub free Data Engineering Zoomcamp. A huge thank you to all of the contributors to this course, it is really insane that this sort of resource can be offered for free to the general public. 
@@ -10,7 +10,7 @@ This data contains almost all of the data of job postings and their applicants f
 ### General information on the data
 This data is only available in French, so some of my data transformation will be aimed at making it more understandable for an English-speaking audience.
 
-The data is updated on a weekly basis, and consists of one CSV file of denormalized data.
+The data is updated on a weekly basis (Tuesdays), and consists of one CSV file of denormalized data that is constantly updated. This means that, instead of ingesting multiple files and merging them into each other, I will need to replace the entire data each time, as detection of differences would likely not be worth it since this is a relatively small dataset. This is done using batch processing, which will be orchestrated using Kestra.
 
 #### Data dictionary
 (Translated from the data dictionary [here](https://donnees.montreal.ca/dataset/offres-demploi-et-postulation#methodology))
@@ -25,8 +25,8 @@ The data is updated on a weekly basis, and consists of one CSV file of denormali
 | `Titre`| varchar | (en: Title) Job title being advertised. |
 | `Emploi`| numeric | (en: Job code) Code of the job being advertised. It is represented by 6 digits.  |
 | `No_Affichage`| varchar | (en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.  |
-| `Debut`| Date | (en: Start) Starting date of the posting. |
-| `Fin` | Date | (en: End) End date for the posting. |
+| `Debut`| date | (en: Start) Starting date of the posting. |
+| `Fin` | date | (en: End) End date for the posting. |
 | `Interne_Externe` | varchar | (en: Internal External) Indicator showing whether the posting is only open to internal applicants or not. |
 | `Nombre_Postulant` | numeric | (en: Number Applying) Total number of applicants having applied for this job posting. |
 | `Nombre_Femme` | numeric | (en: Number Women) Number of women having applied for this posting. |
@@ -34,3 +34,13 @@ The data is updated on a weekly basis, and consists of one CSV file of denormali
 | `Nombre_Minorite_Visible` | numeric | (en: Number Visible Minority) Number of applicants self-identifying as a visible minority. |
 | `Nombre_Autochtone` | numeric | (en: Number Indigenous) Number of applicants self-identifying as indigenous. |
 | `Nombre_Minorite_Ethnique` | numeric | (en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority. |
+
+### Tech stack
+* Python (pandas + sqlalchemy) - Initial data transformation
+* Terraform - cloud infrastructure provisioning
+* Kestra - Ingestion of batch data
+* GCS - Data Lake
+* BigQuery - DWH
+* DBT - Data modeling
+* Google Looker Studio - Analytics
+
