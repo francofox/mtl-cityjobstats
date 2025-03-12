@@ -14,21 +14,23 @@ The data is updated on a weekly basis, and consists of one CSV file of denormali
 
 #### Data dictionary
 (Translated from the data dictionary [here](https://donnees.montreal.ca/dataset/offres-demploi-et-postulation#methodology))
-* `Unite_Niveau1` (numeric): (Unit Level 1) The service unit or borough ID 
-* `Description_Unite_Niveau1` (varchar) : (en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough
-* `Unite` (numeric) : (en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)
-* `Description_Unite` (varchar) : Description of the administrative unit.
-* `Accreditation` (numeric) : (en: Work classification) The work classification of the job being advertised. It is represented by two digits.
-* `Description_Accreditation` (varchar) : (en: Name of the work classification) Name of the work classification.
-* `Titre` (varchar) : (en: Title) Job title being advertised.
-* `Emploi` (numeric) : (en: Job code) Code of the job being advertised. It is represented by 6 digits. 
-* `No_Affichage` (varchar) : (en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated. 
-* `Debut` (Date) : (en: Start) Starting date of the posting.
-* Fin (Date) : Date de fin de l'affichage.
-* Interne_Externe (varchar) : Indicateur permettant de savoir si c'est un affichage ouvert à l'interne exclusivement.
-* Nombre_Postulant (numeric) : Nombre total de postulants ayant postulé sur cet affichage.
-* Nombre_Femme (numeric) : Nombre de femmes ayant postulé sur cet affichage.
-* Nombre_Handicape (numeric) : Nombre de personnes s'étant auto-identifiées en tant que personne handicapée.
-* Nombre_Minorite_Visible (numeric) : Nombre de personnes s'étant auto-identifiées en tant que minorité visible.
-* Nombre_Autochtone (numeric) : Nombre de personnes s'étant auto-identifiées en tant qu'autochtone.
-* Nombre_Minorite_Ethnique (numeric) : Nombre de personnes s'étant auto-identifiées en tant que minorité ethnique.
+| Field | Type | Description |
+| - | - | - | 
+| `Unite_Niveau1` | numeric | (Unit Level 1) The service unit or borough ID |
+| `Description_Unite_Niveau1` | varchar | (en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough |
+| `Unite`| numeric | (en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section) |
+| `Description_Unite`| varchar | Description of the administrative unit. |
+| `Accreditation`| numeric | (en: Work classification) The work classification of the job being advertised. It is represented by two digits. |
+| `Description_Accreditation`| varchar | (en: Name of the work classification) Name of the work classification. |
+| `Titre`| varchar | (en: Title) Job title being advertised. |
+| `Emploi`| numeric | (en: Job code) Code of the job being advertised. It is represented by 6 digits.  |
+| `No_Affichage`| varchar | (en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.  |
+| `Debut`| Date | (en: Start) Starting date of the posting. |
+| `Fin` | Date | Date de fin de l'affichage. |
+| `Interne_Externe` | varchar | Indicateur permettant de savoir si c'est un affichage ouvert à l'interne exclusivement. |
+| `Nombre_Postulant` | numeric | Nombre total de postulants ayant postulé sur cet affichage. |
+| `Nombre_Femme` | numeric | Nombre de femmes ayant postulé sur cet affichage. |
+| `Nombre_Handicape` | numeric | Nombre de personnes s'étant auto-identifiées en tant que personne handicapée. |
+| `Nombre_Minorite_Visible` | numeric | Nombre de personnes s'étant auto-identifiées en tant que minorité visible. |
+| `Nombre_Autochtone` | numeric | Nombre de personnes s'étant auto-identifiées en tant qu'autochtone. |
+| `Nombre_Minorite_Ethnique` | numeric | Nombre de personnes s'étant auto-identifiées en tant que minorité ethnique. |
