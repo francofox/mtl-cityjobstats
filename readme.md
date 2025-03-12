@@ -26,11 +26,11 @@ The data is updated on a weekly basis, and consists of one CSV file of denormali
 | `Emploi`| numeric | (en: Job code) Code of the job being advertised. It is represented by 6 digits.  |
 | `No_Affichage`| varchar | (en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.  |
 | `Debut`| Date | (en: Start) Starting date of the posting. |
-| `Fin` | Date | Date de fin de l'affichage. |
-| `Interne_Externe` | varchar | Indicateur permettant de savoir si c'est un affichage ouvert à l'interne exclusivement. |
-| `Nombre_Postulant` | numeric | Nombre total de postulants ayant postulé sur cet affichage. |
-| `Nombre_Femme` | numeric | Nombre de femmes ayant postulé sur cet affichage. |
-| `Nombre_Handicape` | numeric | Nombre de personnes s'étant auto-identifiées en tant que personne handicapée. |
-| `Nombre_Minorite_Visible` | numeric | Nombre de personnes s'étant auto-identifiées en tant que minorité visible. |
-| `Nombre_Autochtone` | numeric | Nombre de personnes s'étant auto-identifiées en tant qu'autochtone. |
-| `Nombre_Minorite_Ethnique` | numeric | Nombre de personnes s'étant auto-identifiées en tant que minorité ethnique. |
+| `Fin` | Date | (en: End) End date for the posting. |
+| `Interne_Externe` | varchar | (en: Internal External) Indicator showing whether the posting is only open to internal applicants or not. |
+| `Nombre_Postulant` | numeric | (en: Number Applying) Total number of applicants having applied for this job posting. |
+| `Nombre_Femme` | numeric | (en: Number Women) Number of women having applied for this posting. |
+| `Nombre_Handicape` | numeric | (en: Number Disabled) Number of applicants self-identifying as disabled. |
+| `Nombre_Minorite_Visible` | numeric | (en: Number Visible Minority) Number of applicants self-identifying as a visible minority. |
+| `Nombre_Autochtone` | numeric | (en: Number Indigenous) Number of applicants self-identifying as indigenous. |
+| `Nombre_Minorite_Ethnique` | numeric | (en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority. |
