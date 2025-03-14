@@ -2,7 +2,7 @@
 This project uses the data from the [Montréal Open Data site (Données ouvertes de la Ville de Montréal)](https://donnees.montreal.ca) on their SimenLigne Oracle job posting system. This data is available here:
 https://donnees.montreal.ca/dataset/offres-demploi-et-postulation
 
-This project is a capstone project in the DataTalksClub free Data Engineering Zoomcamp. A huge thank you to all of the contributors to this course, it is really insane that this sort of resource can be offered for free to the general public. 
+This project is a capstone project in the DataTalksClub free Data Engineering Zoomcamp. A huge thank you to all of the contributors to this course. It is really insane that this sort of resource can be offered for free to the general public. 
 
 ### Problem this solves
 This data contains almost all of the data of job postings and their applicants for jobs at the City of Montreal Government. This is one of the main employers in Montreal, and is reputed for the stability, pay, and benefits afforded to its employees, as well as the upward and sideways mobility possible within the organization. For this reason, City jobs are highly coveted and competitive. If one would like to build their career at the City, any and all information on the availability of and competition for different jobs is very useful.
@@ -44,3 +44,14 @@ The data is updated on a weekly basis (Tuesdays), and consists of one CSV file o
 * DBT - Data modeling
 * Google Looker Studio - Analytics
 
+## Requirements
+1. Fill out `terraform/variables.tf` with your GCP info
+2. Put your JSON with credentials to GCP (editor for BigQuery and GCS) at `/pki/gcp/creds.json`
+3. In "kestra" folder, create .env file with the following contents filled in with your GCP info (do not change the credsfile though!):
+```
+GCP_BUCKET_NAME=yourbucket
+GCP_DATASET=yourdataset
+PROJECT_ID=yourprojid
+GCP_LOCATION=yourlocation
+GCP_CREDSFILE=/pki/gcp/creds.json
+```
