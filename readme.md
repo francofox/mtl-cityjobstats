@@ -55,3 +55,4 @@ PROJECT_ID=yourprojid
 GCP_LOCATION=yourlocation
 GCP_CREDSFILE=/pki/gcp/creds.json
 ```
+4. Run the 
