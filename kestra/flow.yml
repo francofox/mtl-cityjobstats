@@ -6,12 +6,77 @@ description: |
 variables:
   file: "vdmtl_jobdata_{{ trigger.date | date('yyyy-MM-dd') }}.csv"
   gcs_file: "gs://{{ secret('GCP_BUCKET_NAME') }}/{{ vars.file }}"
-  this_table_name: "{{ secret('GCP_DATASET') }}.{{}}"// finish
+  this_table_name: "{{ secret('GCP_DATASET') }}.jobdata_{{ trigger.date | date('yyyy-MM-dd')}}"
+  data: "{{ outputs.extract.outputFiles['vdmtl_jobdata_' ~ ( trigger.date | date('yyyy-MM-dd' ) ) ~ '.csv'] }}"
+
+tasks:
+  - id: set_label
+    type: io.kestra.plugin.core.execution.Labels
+    labels:
+      file: "{{ render(vars.file) }}"
+
+  - id: extract_file
+    type: io.kestra.plugin.scripts.shell.Commands
+    outputFiles:
+      - *.csv
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    commands:
+      - curl -LsS -o {{ render(vars.file) }} https://donnees.montreal.ca/dataset/bc95ff0e-255f-4db5-a47d-f46f57ee4e8c/resource/f719b197-b851-40a9-b35f-827f3008c1c9/download/ouverture-de-donnees_affichages_postulants.csv
+
+  - id: transfer_file_to_gcs
+    type: io.kestra.plugin.gcp.gcs.Upload
+    from: "{{ render(vars.data) }}"
+    to: "{{ render(vars.gcs_file) }}"
+
+  - id: create_ext_table_raw
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      create or replace external table `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}`
+      (
+        Unite-Niveau1 numeric options (description="(Unit Level 1) The service unit or borough ID"),
+        Description-Unite_Niveau1 string options (description="(en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough"),
+        Unite numeric options (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
+        Description_Unite string options (description="Description of the administrative unit."),
+        Accreditation numeric options (description="(en: Work classification) The work classification of the job being advertised. It is represented by two digits."),
+        Description_Accreditation string options (description="(en: Name of the work classification) Name of the work classification."),
+        Titre string options (description="(en: Title) Job title being advertised."),
+        Emploi numeric options (description="(en: Job code) Code of the job being advertised. It is represented by 6 digits."),
+        No_Affichage string options (description="(en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.)"),
+        Debut date options (description="(en: Start) Starting date of the posting."),
+        Fin date options (description="(en: End) End date for the posting."),
+        Interne_Externe string options (description="(en: Internal External) Indicator showing whether the posting is only open to internal applicants or not."),
+        Nombre_Postulant numeric options (description="(en: Number Applying) Total number of applicants having applied for this job posting."),
+        Nombre_Femme numeric options (description="(en: Number Women) Number of women having applied for this posting.)"),
+        Nombre_Handicape numeric options (description="(en: Number Disabled) Number of applicants self-identifying as disabled."),
+        Nombre_Minorite_Visible numeric options (description="(en: Number Visible Minority) Number of applicants self-identifying as a visible minority."),
+        Nombre_Autochtone numeric options (description="(en: Number Indigenous) Number of applicants self-identifying as indigenous."),
+        Nombre_Minorite_Ethnique numeric options (description="(en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority.")
+      )
+      options (
+        format = "CSV",
+        uris = ['{{ render(vars.gcs_file) }}'],
+        skip_leading_rows = 1,
+        ignore_unknown_values = TRUE
+      );
+  
+  - id: create_main_table
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      create table if not exists `{{secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.jobdata`
+      (
+        -- finish, create a row ID that 
+      )
 
 triggers:
   - id: schedule
     type: io.kestra.plugin.core.trigger.Schedule
     cron: "0 6 * * 3"
 
-pluginDefaults;
-  - 
+pluginDefaults:
+  - type: io.kestra.plugin.gcp
+    values: 
+      serviceAccount: "{{ read(secret('GCP_CREDSFILE')) }}"
+      projectId: "{{ secret('GCP_PROJECT_ID') }}"
+      location: "{{ secret('GCP_LOCATION') }}"
+      bucket: "{{ secret('GCP_BUCKET_NAME') }}"

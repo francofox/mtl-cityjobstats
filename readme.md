@@ -54,5 +54,7 @@ GCP_DATASET=yourdataset
 PROJECT_ID=yourprojid
 GCP_LOCATION=yourlocation
 GCP_CREDSFILE=/pki/gcp/creds.json
+
 ```
-4. Run the 
+Make sure there is an extra line at the end of the file!
+4. Run the `kestra/convert_env_to_encoded.sh` script
