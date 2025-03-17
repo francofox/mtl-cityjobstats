@@ -34,8 +34,8 @@ tasks:
     sql: |
       create or replace external table `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}`
       (
-        Unite-Niveau1 numeric options (description="(Unit Level 1) The service unit or borough ID"),
-        Description-Unite_Niveau1 string options (description="(en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough"),
+        Unite_Niveau1 numeric options (description="(Unit Level 1) The service unit or borough ID"),
+        Description_Unite_Niveau1 string options (description="(en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough"),
         Unite numeric options (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
         Description_Unite string options (description="Description of the administrative unit."),
         Accreditation numeric options (description="(en: Work classification) The work classification of the job being advertised. It is represented by two digits."),
@@ -63,11 +63,49 @@ tasks:
   - id: create_main_table
     type: io.kestra.plugin.gcp.bigquery.Query
     sql: |
-      create table if not exists `{{secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.jobdata`
+      CREATE TABLE IF NOT EXISTS `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.jobdata`
       (
-        -- finish, create a row ID that 
-      )
+        row_id BYTES OPTIONS (description="Row ID, calculated off the 'Debut', 'Nombre_Postulant' and 'No_Affichage' fields."),
+        Unite_Niveau1 NUMERIC OPTIONS (description="(Unit Level 1) The service unit or borough ID"),
+        Description_Unite_Niveau1 STRING OPTIONS (description="(en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough"),
+        Unite NUMERIC OPTIONS (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
+        Description_Unite STRING OPTIONS (description="Description of the administrative unit."),
+        Accreditation NUMERIC OPTIONS (description="(en: Work classification) The work classification of the job being advertised. It is represented by two digits."),
+        Description_Accreditation STRING OPTIONS (description="(en: Name of the work classification) Name of the work classification."),
+        Titre STRING OPTIONS (description="(en: Title) Job title being advertised."),
+        Emploi NUMERIC OPTIONS (description="(en: Job code) Code of the job being advertised. It is represented by 6 digits."),
+        No_Affichage STRING OPTIONS (description="(en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.)"),
+        Debut DATE OPTIONS (description="(en: Start) Starting date of the posting."),
+        Fin DATE OPTIONS (description="(en: End) End date for the posting."),
+        Interne_Externe STRING OPTIONS (description="(en: Internal External) Indicator showing whether the posting is only open to internal applicants or not."),
+        Nombre_Postulant NUMERIC OPTIONS (description="(en: Number Applying) Total number of applicants having applied for this job posting."),
+        Nombre_Femme NUMERIC OPTIONS (description="(en: Number Women) Number of women having applied for this posting.)"),
+        Nombre_Handicape NUMERIC OPTIONS (description="(en: Number Disabled) Number of applicants self-identifying as disabled."),
+        Nombre_Minorite_Visible NUMERIC OPTIONS (description="(en: Number Visible Minority) Number of applicants self-identifying as a visible minority."),
+        Nombre_Autochtone NUMERIC OPTIONS (description="(en: Number Indigenous) Number of applicants self-identifying as indigenous."),
+        Nombre_Minorite_Ethnique NUMERIC OPTIONS (description="(en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority.")
+      ) PARTITION BY DATE(Debut); -- this will not necessarily help since the table size is far too small, but this is for the experience
+  
+  - id: merge_into_main_table
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      MERGE INTO `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.jobdata` AS main
+      USING (
+        SELECT 
+          MD5(COALESCE(No_Affichage, "") 
+            || COALESCE(CAST (Debut AS STRING), "") 
+            || COALESCE(CAST(Nombre_Postulant AS STRING), "")) AS row_id,
+          *
+        FROM `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}`
+      ) AS tmp
+      ON orig.row_id = tmp.row_id
+      WHEN NOT MATCHED THEN
+        INSERT (row_id, Unite_Niveau1, Description_Unite_Niveau1, Unite, Description_Unite, Accreditation, Description_Accreditation, Titre, Emploi, No_Affichage, Debut, Fin, Interne_Externe, Nombre_Postulant, Nombre_Femme, Nombre_Handicape, Nombre_Minorite_Visible, Nombre_Autochtone, Nombre_Minorite_Ethnique)
+        VALUES (tmp.row_id, tmp.Unite_Niveau1, tmp.Description_Unite_Niveau1, tmp.Unite, tmp.Description_Unite, tmp.Accreditation, tmp.Description_Accreditation, tmp.Titre, tmp.Emploi, tmp.No_Affichage, tmp.Debut, tmp.Fin, tmp.Interne_Externe, tmp.Nombre_Postulant, tmp.Nombre_Femme, tmp.Nombre_Handicape, tmp.Nombre_Minorite_Visible, tmp.Nombre_Autochtone, tmp.Nombre_Minorite_Ethnique);
 
+  - id: purge_files
+    type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
+    
 triggers:
   - id: schedule
     type: io.kestra.plugin.core.trigger.Schedule
