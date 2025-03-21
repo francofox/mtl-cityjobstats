@@ -7,7 +7,7 @@ variables:
   file: "vdmtl_jobdata_{{ trigger.date | date('yyyy-MM-dd') }}.csv"
   gcs_file: "gs://{{ secret('GCP_BUCKET_NAME') }}/{{ vars.file }}"
   this_table_name: "{{ secret('GCP_DATASET') }}.jobdata_{{ trigger.date | date('yyyy-MM-dd')}}"
-  data: "{{ outputs.extract.outputFiles['vdmtl_jobdata_' ~ ( trigger.date | date('yyyy-MM-dd' ) ) ~ '.csv'] }}"
+  data: "{{ outputs.extract_file.outputFiles['vdmtl_jobdata_' ~ ( trigger.date | date('yyyy-MM-dd' ) ) ~ '.csv'] }}"
 
 tasks:
   - id: set_label
@@ -18,7 +18,7 @@ tasks:
   - id: extract_file
     type: io.kestra.plugin.scripts.shell.Commands
     outputFiles:
-      - *.csv
+      - "*.csv"
     taskRunner:
       type: io.kestra.plugin.core.runner.Process
     commands:
@@ -84,7 +84,7 @@ tasks:
         Nombre_Minorite_Visible NUMERIC OPTIONS (description="(en: Number Visible Minority) Number of applicants self-identifying as a visible minority."),
         Nombre_Autochtone NUMERIC OPTIONS (description="(en: Number Indigenous) Number of applicants self-identifying as indigenous."),
         Nombre_Minorite_Ethnique NUMERIC OPTIONS (description="(en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority.")
-      ) PARTITION BY DATE(Debut); -- this will not necessarily help since the table size is far too small, but this is for the experience
+      ) PARTITION BY Debut; -- this will not necessarily help since the table size is far too small, but this is for the experience
   
   - id: merge_into_main_table
     type: io.kestra.plugin.gcp.bigquery.Query
@@ -98,14 +98,14 @@ tasks:
           *
         FROM `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}`
       ) AS tmp
-      ON orig.row_id = tmp.row_id
+      ON main.row_id = tmp.row_id
       WHEN NOT MATCHED THEN
         INSERT (row_id, Unite_Niveau1, Description_Unite_Niveau1, Unite, Description_Unite, Accreditation, Description_Accreditation, Titre, Emploi, No_Affichage, Debut, Fin, Interne_Externe, Nombre_Postulant, Nombre_Femme, Nombre_Handicape, Nombre_Minorite_Visible, Nombre_Autochtone, Nombre_Minorite_Ethnique)
         VALUES (tmp.row_id, tmp.Unite_Niveau1, tmp.Description_Unite_Niveau1, tmp.Unite, tmp.Description_Unite, tmp.Accreditation, tmp.Description_Accreditation, tmp.Titre, tmp.Emploi, tmp.No_Affichage, tmp.Debut, tmp.Fin, tmp.Interne_Externe, tmp.Nombre_Postulant, tmp.Nombre_Femme, tmp.Nombre_Handicape, tmp.Nombre_Minorite_Visible, tmp.Nombre_Autochtone, tmp.Nombre_Minorite_Ethnique);
 
   - id: purge_files
     type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
-    
+
 triggers:
   - id: schedule
     type: io.kestra.plugin.core.trigger.Schedule
@@ -114,7 +114,7 @@ triggers:
 pluginDefaults:
   - type: io.kestra.plugin.gcp
     values: 
-      serviceAccount: "{{ read(secret('GCP_CREDSFILE')) }}"
+      serviceAccount: "{{ secret('GCP_SERVICE_ACCOUNT') }}"
       projectId: "{{ secret('GCP_PROJECT_ID') }}"
       location: "{{ secret('GCP_LOCATION') }}"
       bucket: "{{ secret('GCP_BUCKET_NAME') }}"

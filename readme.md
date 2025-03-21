@@ -36,7 +36,6 @@ The data is updated on a weekly basis (Tuesdays), and consists of one CSV file o
 | `Nombre_Minorite_Ethnique` | numeric | (en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority. |
 
 ### Tech stack
-* Python (pandas + sqlalchemy) - Initial data transformation
 * Terraform - cloud infrastructure provisioning
 * Kestra - Ingestion of batch data
 * GCS - Data Lake
@@ -44,17 +43,27 @@ The data is updated on a weekly basis (Tuesdays), and consists of one CSV file o
 * DBT - Data modeling
 * Google Looker Studio - Analytics
 
-## Requirements
-1. Fill out `terraform/variables.tf` with your GCP info
-2. Put your JSON with credentials to GCP (editor for BigQuery and GCS) at `/pki/gcp/creds.json`
-3. In "kestra" folder, create .env file with the following contents filled in with your GCP info (do not change the credsfile though!):
+*A unix-based OS, or at least the ability to run shell scripts, is assumed. If you are using Windows, please run this project using WSL2.*
+
+## Instructions
+#### Setup
+1. Create a GCP project, create a service user for your tenant with data owner for BigQuery and admin for GCS permissions, and save the JSON and the project ID and other relevant variables
+2. Fill out `terraform/variables.tf` with your GCP info
+3. Put your JSON with credentials to GCP at `~/.pki/gcp/creds.json`
+4. In "kestra" folder, create .env file with the following contents filled in with your GCP info:
 ```
 GCP_BUCKET_NAME=yourbucket
 GCP_DATASET=yourdataset
-PROJECT_ID=yourprojid
+GCP_PROJECT_ID=yourprojid
 GCP_LOCATION=yourlocation
-GCP_CREDSFILE=/pki/gcp/creds.json
 
 ```
 Make sure there is an extra line at the end of the file!
-4. Run the `kestra/convert_env_to_encoded.sh` script
+
+5. Run the `kestra/convert_env_to_encoded.sh` script
+#### Terraforming our environment
+6. Run `terraform init`, then `terraform apply` in the `terraform` folder
+#### Loading into Data Lake and moving into DWH by batch processing
+7. Run `docker compose up` in the `kestra` folder
+8. Connect to Kestra at [localhost:8080](http://localhost:8080) and create a new flow.
+9. Copy and paste in the flow at `kestra/flow.yml`, go to the 

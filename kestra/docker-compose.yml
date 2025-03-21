@@ -32,7 +32,6 @@ services:
       - kestra-data:/app/storage
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/kestra-wd:/tmp/kestra-wd
-      - /pki/gcp:/pki/gcp
     environment:
       KESTRA_CONFIGURATION: |
         datasources:

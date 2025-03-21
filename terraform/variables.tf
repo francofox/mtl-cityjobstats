@@ -1,11 +1,11 @@
 variable "credentials" {
     description = "Credentials for GCP"
-    default = "/pki/gcp/creds.json"
+    default = "~/.pki/gcp/creds.json"
 }
 
 variable "project" {
     description = "GCP Project Id"
-    default = "vdmtl_jobspostul"
+    default = "vdmtl-jobspostul"
 }
 
 variable "region" {
@@ -25,7 +25,7 @@ variable "bq_dataset_name" {
 
 variable "gcs_bucket_name" {
     description = "GCS bucket name"
-    default = "vdemtl_jobspostul"
+    default = "vdemtl-jobspostul"
 }
 
 variable "gcs_storage_class" {

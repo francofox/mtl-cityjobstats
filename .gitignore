@@ -1,3 +1,5 @@
 *.csv
 .env
 .env_encoded
+.terraform*
+terraform.*
