@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: staging
+    database: vdmtl-jobspostul
+    schema: vdmtl_jobs
+
+    tables:
+      - name: jobdata
