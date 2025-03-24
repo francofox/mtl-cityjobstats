@@ -43,7 +43,7 @@ The data is updated on a weekly basis (Tuesdays), and consists of one CSV file o
 * DBT - Data modeling
 * Google Looker Studio - Analytics
 
-*A unix-based OS, or at least the ability to run shell scripts, is assumed. If you are using Windows, please run this project using WSL2.*
+*A unix-based OS, or at least the ability to run shell scripts and store things in the `~` folder, is assumed. If you are using Windows, please run this project using WSL2.*
 
 ## Instructions
 #### Setup
@@ -56,11 +56,9 @@ GCP_BUCKET_NAME=yourbucket
 GCP_DATASET=yourdataset
 GCP_PROJECT_ID=yourprojid
 GCP_LOCATION=yourlocation
-
 ```
-Make sure there is an extra line at the end of the file!
 
-5. Run the `kestra/convert_env_to_encoded.sh` script
+5. Run the `kestra/convert_env_to_encoded.py` script
 #### Terraforming our environment
 6. Run `terraform init`, then `terraform apply` in the `terraform` folder
 #### Loading into Data Lake and moving into DWH by batch processing
