@@ -34,24 +34,24 @@ tasks:
     sql: |
       create or replace external table `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}`
       (
-        Unite_Niveau1 numeric options (description="(Unit Level 1) The service unit or borough ID"),
+        Unite_Niveau1 integer options (description="(Unit Level 1) The service unit or borough ID"),
         Description_Unite_Niveau1 string options (description="(en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough"),
-        Unite numeric options (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
+        Unite integer options (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
         Description_Unite string options (description="Description of the administrative unit."),
-        Accreditation numeric options (description="(en: Work classification) The work classification of the job being advertised. It is represented by two digits."),
+        Accreditation integer options (description="(en: Work classification) The work classification of the job being advertised. It is represented by two digits."),
         Description_Accreditation string options (description="(en: Name of the work classification) Name of the work classification."),
         Titre string options (description="(en: Title) Job title being advertised."),
-        Emploi numeric options (description="(en: Job code) Code of the job being advertised. It is represented by 6 digits."),
+        Emploi integer options (description="(en: Job code) Code of the job being advertised. It is represented by 6 digits."),
         No_Affichage string options (description="(en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.)"),
         Debut date options (description="(en: Start) Starting date of the posting."),
         Fin date options (description="(en: End) End date for the posting."),
         Interne_Externe string options (description="(en: Internal External) Indicator showing whether the posting is only open to internal applicants or not."),
-        Nombre_Postulant numeric options (description="(en: Number Applying) Total number of applicants having applied for this job posting."),
-        Nombre_Femme numeric options (description="(en: Number Women) Number of women having applied for this posting.)"),
-        Nombre_Handicape numeric options (description="(en: Number Disabled) Number of applicants self-identifying as disabled."),
-        Nombre_Minorite_Visible numeric options (description="(en: Number Visible Minority) Number of applicants self-identifying as a visible minority."),
-        Nombre_Autochtone numeric options (description="(en: Number Indigenous) Number of applicants self-identifying as indigenous."),
-        Nombre_Minorite_Ethnique numeric options (description="(en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority.")
+        Nombre_Postulant integer options (description="(en: Number Applying) Total number of applicants having applied for this job posting."),
+        Nombre_Femme integer options (description="(en: Number Women) Number of women having applied for this posting.)"),
+        Nombre_Handicape integer options (description="(en: Number Disabled) Number of applicants self-identifying as disabled."),
+        Nombre_Minorite_Visible integer options (description="(en: Number Visible Minority) Number of applicants self-identifying as a visible minority."),
+        Nombre_Autochtone integer options (description="(en: Number Indigenous) Number of applicants self-identifying as indigenous."),
+        Nombre_Minorite_Ethnique integer options (description="(en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority.")
       )
       options (
         format = "CSV",
@@ -81,24 +81,24 @@ tasks:
       (
         row_id BYTES OPTIONS (description="Row ID, calculated off the 'Debut' and 'No_Affichage' fields."),
         unique_id BYTES OPTIONS (description="Uniqueness ID, for determining which rows have changed for merging into. Calculated off the 'Debut', 'Nombre_Postulant' and 'No_Affichage' fields."),
-        Unite_Niveau1 NUMERIC OPTIONS (description="(Unit Level 1) The service unit or borough ID"),
+        Unite_Niveau1 INTEGER OPTIONS (description="(Unit Level 1) The service unit or borough ID"),
         Description_Unite_Niveau1 STRING OPTIONS (description="(en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough"),
-        Unite NUMERIC OPTIONS (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
+        Unite INTEGER OPTIONS (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
         Description_Unite STRING OPTIONS (description="Description of the administrative unit."),
-        Accreditation NUMERIC OPTIONS (description="(en: Work classification) The work classification of the job being advertised. It is represented by two digits."),
+        Accreditation INTEGER OPTIONS (description="(en: Work classification) The work classification of the job being advertised. It is represented by two digits."),
         Description_Accreditation STRING OPTIONS (description="(en: Name of the work classification) Name of the work classification."),
         Titre STRING OPTIONS (description="(en: Title) Job title being advertised."),
-        Emploi NUMERIC OPTIONS (description="(en: Job code) Code of the job being advertised. It is represented by 6 digits."),
+        Emploi INTEGER OPTIONS (description="(en: Job code) Code of the job being advertised. It is represented by 6 digits."),
         No_Affichage STRING OPTIONS (description="(en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.)"),
         Debut DATE OPTIONS (description="(en: Start) Starting date of the posting."),
         Fin DATE OPTIONS (description="(en: End) End date for the posting."),
         Interne_Externe STRING OPTIONS (description="(en: Internal External) Indicator showing whether the posting is only open to internal applicants or not."),
-        Nombre_Postulant NUMERIC OPTIONS (description="(en: Number Applying) Total number of applicants having applied for this job posting."),
-        Nombre_Femme NUMERIC OPTIONS (description="(en: Number Women) Number of women having applied for this posting.)"),
-        Nombre_Handicape NUMERIC OPTIONS (description="(en: Number Disabled) Number of applicants self-identifying as disabled."),
-        Nombre_Minorite_Visible NUMERIC OPTIONS (description="(en: Number Visible Minority) Number of applicants self-identifying as a visible minority."),
-        Nombre_Autochtone NUMERIC OPTIONS (description="(en: Number Indigenous) Number of applicants self-identifying as indigenous."),
-        Nombre_Minorite_Ethnique NUMERIC OPTIONS (description="(en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority.")
+        Nombre_Postulant INTEGER OPTIONS (description="(en: Number Applying) Total number of applicants having applied for this job posting."),
+        Nombre_Femme INTEGER OPTIONS (description="(en: Number Women) Number of women having applied for this posting.)"),
+        Nombre_Handicape INTEGER OPTIONS (description="(en: Number Disabled) Number of applicants self-identifying as disabled."),
+        Nombre_Minorite_Visible INTEGER OPTIONS (description="(en: Number Visible Minority) Number of applicants self-identifying as a visible minority."),
+        Nombre_Autochtone INTEGER OPTIONS (description="(en: Number Indigenous) Number of applicants self-identifying as indigenous."),
+        Nombre_Minorite_Ethnique INTEGER OPTIONS (description="(en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority.")
       ) PARTITION BY DATE_TRUNC(Debut, MONTH); -- this will not necessarily help since the table size is far too small, but this is for the experience
   
   - id: merge_into_main_table
