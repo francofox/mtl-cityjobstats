@@ -16,28 +16,29 @@ The data is updated on a weekly basis (Tuesdays), and consists of one CSV file o
 (Translated from the data dictionary [here](https://donnees.montreal.ca/dataset/offres-demploi-et-postulation#methodology))
 | Field | Type | Description |
 | - | - | - | 
-| `Unite_Niveau1` | numeric | (Unit Level 1) The service unit or borough ID |
+| `Unite_Niveau1` | int | (Unit Level 1) The service unit or borough ID |
 | `Description_Unite_Niveau1` | varchar | (en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough |
-| `Unite`| numeric | (en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section) |
+| `Unite`| int | (en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section) |
 | `Description_Unite`| varchar | Description of the administrative unit. |
-| `Accreditation`| numeric | (en: Work classification) The work classification of the job being advertised. It is represented by two digits. |
+| `Accreditation`| int | (en: Work classification) The work classification of the job being advertised. It is represented by two digits. |
 | `Description_Accreditation`| varchar | (en: Name of the work classification) Name of the work classification. |
 | `Titre`| varchar | (en: Title) Job title being advertised. |
-| `Emploi`| numeric | (en: Job code) Code of the job being advertised. It is represented by 6 digits.  |
+| `Emploi`| int | (en: Job code) Code of the job being advertised. It is represented by 6 digits.  |
 | `No_Affichage`| varchar | (en: Post number) Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.  |
 | `Debut`| date | (en: Start) Starting date of the posting. |
 | `Fin` | date | (en: End) End date for the posting. |
 | `Interne_Externe` | varchar | (en: Internal External) Indicator showing whether the posting is only open to internal applicants or not. |
-| `Nombre_Postulant` | numeric | (en: Number Applying) Total number of applicants having applied for this job posting. |
-| `Nombre_Femme` | numeric | (en: Number Women) Number of women having applied for this posting. |
-| `Nombre_Handicape` | numeric | (en: Number Disabled) Number of applicants self-identifying as disabled. |
-| `Nombre_Minorite_Visible` | numeric | (en: Number Visible Minority) Number of applicants self-identifying as a visible minority. |
-| `Nombre_Autochtone` | numeric | (en: Number Indigenous) Number of applicants self-identifying as indigenous. |
-| `Nombre_Minorite_Ethnique` | numeric | (en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority. |
+| `Nombre_Postulant` | int | (en: Number Applying) Total number of applicants having applied for this job posting. |
+| `Nombre_Femme` | int | (en: Number Women) Number of women having applied for this posting. |
+| `Nombre_Handicape` | int | (en: Number Disabled) Number of applicants self-identifying as disabled. |
+| `Nombre_Minorite_Visible` | int | (en: Number Visible Minority) Number of applicants self-identifying as a visible minority. |
+| `Nombre_Autochtone` | int | (en: Number Indigenous) Number of applicants self-identifying as indigenous. |
+| `Nombre_Minorite_Ethnique` | int | (en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority. |
 
 ### Tech stack
 * Terraform - cloud infrastructure provisioning
-* Kestra - Ingestion of batch data
+* Python - glue code
+* Kestra - Ingestion of batch data, transfer to data lake, then transform and loading of data into data warehouse
 * GCS - Data Lake
 * BigQuery - DWH
 * DBT - Data modeling
@@ -47,10 +48,11 @@ The data is updated on a weekly basis (Tuesdays), and consists of one CSV file o
 
 ## Instructions
 #### Setup
-1. Create a GCP project, create a service user for your tenant with data owner for BigQuery and admin for GCS permissions, and save the JSON and the project ID and other relevant variables
-2. Fill out `terraform/variables.tf` with your GCP info
-3. Put your JSON with credentials to GCP at `~/.pki/gcp/creds.json`
-4. In "kestra" folder, create .env file with the following contents filled in with your GCP info:
+1. Clone this git repo and make sure it is in your GitHub (will make it easier for DBT Cloud in the future).
+2. Create a GCP project, create a service user for your tenant with data owner for BigQuery and admin for GCS permissions, and save the JSON and the project ID and other relevant variables
+3. Fill out `terraform/variables.tf` with your GCP info
+4. Put your JSON with credentials to GCP at `~/.pki/gcp/creds.json`
+5. In "kestra" folder, create .env file with the following contents filled in with your GCP info:
 ```
 GCP_BUCKET_NAME=yourbucket
 GCP_DATASET=yourdataset
@@ -58,10 +60,15 @@ GCP_PROJECT_ID=yourprojid
 GCP_LOCATION=yourlocation
 ```
 
-5. Run the `kestra/convert_env_to_encoded.py` script
+6. Run the `kestra/convert_env_to_encoded.py` script
 #### Terraforming our environment
-6. Run `terraform init`, then `terraform apply` in the `terraform` folder
+7. Run `terraform init`, then `terraform apply` in the `terraform` folder
 #### Loading into Data Lake and moving into DWH by batch processing
-7. Run `docker compose up` in the `kestra` folder
-8. Connect to Kestra at [localhost:8080](http://localhost:8080) and create a new flow.
-9. Copy and paste in the flow at `kestra/flow.yml`, go to the 
+8. Run `docker compose up` in the `kestra` folder
+9. Connect to Kestra at [localhost:8080](http://localhost:8080) and create a new flow.
+10. Copy and paste in the flow at `kestra/flow.yml`, save it, go to the "Triggers" tab of the flow, and execute a backfill covering the last Wednesday.
+11. Verify that everything ran correctly and that there were no errors.
+#### Data Modeling with DBT
+12. Set up a new DBT Cloud project with the BigQuery connection we created previously, and a GitHub connection to your clone of this repo with the subdirectory `dbt`.
+13. Change the variables in the `dbt_project.yml` file so that they point to your BigQuery database and dataset. Alternatively, build the models using `dbt build --vars '{bq_db: your_bq_database, bq_ds: your_bq_dataset}'`, corresponding to the dataset containing the `jobdata` table.
+
