@@ -41,7 +41,10 @@ models:
       materialized: view
     core:
       materialized: table
-# vars:
+
+vars:
+  bq_db: "vdmtl-jobspostul"
+  bq_ds: "vdmtl_jobs"
   # il n'y en a pas en ce moment
   # il faut que je fasse un peu de querying pour determiner les traductions que je veux faire
   # juste pour que les donnees soient comprehensibles pour le public vise

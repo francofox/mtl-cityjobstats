@@ -2,8 +2,8 @@ version: 2
 
 sources:
   - name: staging
-    database: vdmtl-jobspostul
-    schema: vdmtl_jobs
+    database: "{{ var('bq_db') }}"
+    schema: "{{ var('bq_ds') }}"
 
     tables:
       - name: jobdata
