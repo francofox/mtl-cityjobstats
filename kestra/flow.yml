@@ -22,7 +22,7 @@ tasks:
     taskRunner:
       type: io.kestra.plugin.core.runner.Process
     commands:
-      - curl -LsS -o {{ render(vars.file) }} https://donnees.montreal.ca/dataset/bc95ff0e-255f-4db5-a47d-f46f57ee4e8c/resource/f719b197-b851-40a9-b35f-827f3008c1c9/download/ouverture-de-donnees_affichages_postulants.csv
+      - wget -qO {{ render(vars.file) }} https://donnees.montreal.ca/dataset/bc95ff0e-255f-4db5-a47d-f46f57ee4e8c/resource/f719b197-b851-40a9-b35f-827f3008c1c9/download/ouverture-de-donnees_affichages_postulants.csv
 
   - id: transfer_file_to_gcs
     type: io.kestra.plugin.gcp.gcs.Upload
@@ -60,13 +60,27 @@ tasks:
         ignore_unknown_values = TRUE
       );
   
+  - id: create_tmp_view
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      CREATE OR REPLACE VIEW `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}_tmp` AS (
+        SELECT 
+          MD5(COALESCE(No_Affichage, "")
+            || COALESCE(CAST(Debut AS STRING), "")) AS row_id,
+          MD5(COALESCE(No_Affichage, "") 
+            || COALESCE(CAST (Debut AS STRING), "") 
+            || COALESCE(CAST(Nombre_Postulant AS STRING), "")) AS unique_id,
+          *
+        FROM `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}`
+      );
+      
   - id: create_main_table
     type: io.kestra.plugin.gcp.bigquery.Query
     sql: |
       CREATE TABLE IF NOT EXISTS `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.jobdata`
       (
         row_id BYTES OPTIONS (description="Row ID, calculated off the 'Debut' and 'No_Affichage' fields."),
-        unique_id BYTES OPTIONS (description="Uniqueness ID, for determining which rows have changed for merging into. Calculated off the 'Debut', 'Nombre_Postulant' and 'No_Affichage' fields.")
+        unique_id BYTES OPTIONS (description="Uniqueness ID, for determining which rows have changed for merging into. Calculated off the 'Debut', 'Nombre_Postulant' and 'No_Affichage' fields."),
         Unite_Niveau1 NUMERIC OPTIONS (description="(Unit Level 1) The service unit or borough ID"),
         Description_Unite_Niveau1 STRING OPTIONS (description="(en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough"),
         Unite NUMERIC OPTIONS (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
@@ -85,22 +99,13 @@ tasks:
         Nombre_Minorite_Visible NUMERIC OPTIONS (description="(en: Number Visible Minority) Number of applicants self-identifying as a visible minority."),
         Nombre_Autochtone NUMERIC OPTIONS (description="(en: Number Indigenous) Number of applicants self-identifying as indigenous."),
         Nombre_Minorite_Ethnique NUMERIC OPTIONS (description="(en: Number Ethnic Minority) Number of applicants self-identifying as an ethnic minority.")
-      ) PARTITION BY Debut; -- this will not necessarily help since the table size is far too small, but this is for the experience
+      ) PARTITION BY DATE_TRUNC(Debut, MONTH); -- this will not necessarily help since the table size is far too small, but this is for the experience
   
   - id: merge_into_main_table
     type: io.kestra.plugin.gcp.bigquery.Query
     sql: |
       MERGE INTO `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.jobdata` AS main
-      USING (
-        SELECT 
-          MD5(COALESCE(No_Affichage, "")
-            || COALESCE(CAST(Debut AS STRING), "")) AS row_id,
-          MD5(COALESCE(No_Affichage, "") 
-            || COALESCE(CAST (Debut AS STRING), "") 
-            || COALESCE(CAST(Nombre_Postulant AS STRING), "")) AS unique_id,
-          *
-        FROM `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}`
-      ) AS tmp
+      USING `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}_tmp` AS tmp
       ON main.row_id = tmp.row_id
       WHEN MATCHED AND main.unique_id <> tmp.unique_id THEN
         UPDATE SET
