@@ -35,7 +35,7 @@ compiled as (
         adminunit,
         adminunit_desc,
 
-        classif,
+        jobdata.classif,
         jobdata.classif_desc as classif_fr,
         classifications.classif_en as classif_en,
 
