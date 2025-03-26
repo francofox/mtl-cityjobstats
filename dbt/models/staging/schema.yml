@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: staging
+    database: "{{ var('bq_db') }}"
+    schema: "{{ var('bq_ds') }}"
+
+    tables:
+      - name: jobdata
