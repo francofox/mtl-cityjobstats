@@ -1,6 +1,11 @@
 {{
     config(
-        materialized='table'
+        materialized='table',
+        partition_by={
+            "field": "start_date",
+            "data_type": "date",
+            "granularity": "month"
+        }
     )
 }}
 
@@ -32,14 +37,14 @@ compiled as (
 
         classif,
         classif_desc as classif_fr,
-        classifications.classif_en,
+        classifications.classif_en as classif_en,
 
         case when internal_external = "Interne/Externe" then "Internal/External" else "Internal" as internal_external,
         
         jobtitle as jobtitle_fr,
         jobcodes.jobtitle_en as jobtitle_en,
         jobcode,
-        
+
         posting_num,
         start_date,
         end_date,
