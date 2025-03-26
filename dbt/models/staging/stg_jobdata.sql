@@ -37,8 +37,7 @@ renamed as (
         {{ dbt.safe_cast("Nombre_Autochtone", api.Column.translate_type("integer")) }} as num_indigenous,
         {{ dbt.safe_cast("Nombre_Minorite_Ethnique", api.Column.translate_type("integer")) }} as num_ethnicminority
     
-    from source 
-    where start_date is not null
+    from source
 )
 
 select * from renamed
