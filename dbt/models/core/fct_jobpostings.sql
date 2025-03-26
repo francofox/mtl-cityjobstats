@@ -39,7 +39,7 @@ compiled as (
         classif_desc as classif_fr,
         classifications.classif_en as classif_en,
 
-        case when internal_external = "Interne/Externe" then "Internal/External" else "Internal" as internal_external,
+        case when internal_external = "Interne/Externe" then "Internal/External" else "Internal" end as internal_external,
         
         jobtitle as jobtitle_fr,
         jobcodes.jobtitle_en as jobtitle_en,
