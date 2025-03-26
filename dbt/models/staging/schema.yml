@@ -7,3 +7,83 @@ sources:
 
     tables:
       - name: jobdata
+
+models:
+  - name: stg_jobdata
+    description: "Raw job posting data from the Montreal Open Data site"
+    columns:
+      - name: jobid
+        data_type: string
+        description: "Job posting ID, generated for analysis as a primary key"
+
+      - name: unit_lv1
+        data_type: int64
+        description: "The service unit or borough ID"
+
+      - name: unit_lv1_desc
+        data_type: string
+        description: "Name of the Unit Level 1 service unit or borough"
+
+      - name: adminunit
+        data_type: int64
+        description: "The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"
+
+      - name: adminunit_desc
+        data_type: string
+        description: "Description of the administrative unit."
+
+      - name: classif
+        data_type: int64
+        description: "The work classification of the job being advertised. It is represented by two digits."
+
+      - name: classif_desc
+        data_type: string
+        description: "Name of the work classification."
+
+      - name: internal_external
+        data_type: string
+        description: "Indicator showing whether the posting is only open to internal applicants or not."
+
+      - name: jobtitle
+        data_type: string
+        description: "Job title being advertised."
+
+      - name: jobcode
+        data_type: int64
+        description: "Code of the job being advertised. It is represented by 6 digits."
+
+      - name: posting_num
+        data_type: string
+        description: "Job posting number. It is an alphanumeric field with a defined standard for its nomenclature. Ex.: FIN-16-TEMP-344210-1 means that it is a job posting in the financial services unit in 2016 for a temporary position for the job code 344210. In certain cases, the position number is also indicated.)"
+
+      - name: start_date
+        data_type: date
+        description: "Starting date of the posting."
+
+      - name: end_date
+        data_type: date
+        description: "End date for the posting."
+
+      - name: num_applying
+        data_type: int64
+        description: "Total number of applicants having applied for this job posting."
+
+      - name: num_women
+        data_type: int64
+        description: "Number of women having applied for this posting."
+
+      - name: num_disabled
+        data_type: int64
+        description: "Number of applicants self-identifying as disabled."
+
+      - name: num_minority
+        data_type: int64
+        description: "Number of applicants self-identifying as a visible minority."
+
+      - name: num_indigenous
+        data_type: int64
+        description: "Number of applicants self-identifying as indigenous."
+
+      - name: num_ethnicminority
+        data_type: int64
+        description: "Number of applicants self-identifying as an ethnic minority."
