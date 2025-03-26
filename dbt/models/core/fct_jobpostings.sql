@@ -24,16 +24,22 @@ compiled as (
     select 
         jobid,
         unit_lv1,
-        unit_lv1_desc,
+        unit_lv1_desc as unit_lv1_fr,
+        lv1units.unit_lv1_en as unit_lv1_en,
         
         adminunit,
         adminunit_desc,
+
         classif,
-        classif_desc,
-        internal_external,
+        classif_desc as classif_fr,
+        classifications.classif_en,
+
+        case when internal_external = "Interne/Externe" then "Internal/External" else "Internal" as internal_external,
         
-        jobtitle,
+        jobtitle as jobtitle_fr,
+        jobcodes.jobtitle_en as jobtitle_en,
         jobcode,
+        
         posting_num,
         start_date,
         end_date,
