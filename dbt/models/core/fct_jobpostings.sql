@@ -43,7 +43,7 @@ compiled as (
         
         jobdata.jobtitle as jobtitle_fr,
         jobcodes.jobtitle_en as jobtitle_en,
-        jobcode,
+        jobdata.jobcode,
 
         posting_num,
         start_date,
