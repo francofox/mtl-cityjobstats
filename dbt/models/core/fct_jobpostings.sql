@@ -23,7 +23,7 @@ classifications as (
 
 lv1units as (
     select * from {{ ref('dim_lv1units') }}
-)
+),
 
 compiled as (
     select 
