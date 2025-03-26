@@ -28,20 +28,20 @@ lv1units as (
 compiled as (
     select 
         jobid,
-        unit_lv1,
-        unit_lv1_desc as unit_lv1_fr,
+        jobdata.unit_lv1 as unit_lv1,
+        jobdata.unit_lv1_desc as unit_lv1_fr,
         lv1units.unit_lv1_en as unit_lv1_en,
         
         adminunit,
         adminunit_desc,
 
         classif,
-        classif_desc as classif_fr,
+        jobdata.classif_desc as classif_fr,
         classifications.classif_en as classif_en,
 
         case when internal_external = "Interne/Externe" then "Internal/External" else "Internal" end as internal_external,
         
-        jobtitle as jobtitle_fr,
+        jobdata.jobtitle as jobtitle_fr,
         jobcodes.jobtitle_en as jobtitle_en,
         jobcode,
 
