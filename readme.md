@@ -7,10 +7,12 @@ This project is a capstone project in the DataTalksClub free Data Engineering Zo
 ### Problem this solves
 This data contains almost all of the data of job postings and their applicants for jobs at the City of Montreal Government. This is one of the main employers in Montreal, and is reputed for the stability, pay, and benefits afforded to its employees, as well as the upward and sideways mobility possible within the organization. For this reason, City jobs are highly coveted and competitive. If one would like to build their career at the City, any and all information on the availability of and competition for different jobs is very useful.
 
-### General information on the data
-This data is only available in French, so some of my data transformation will be aimed at making it more understandable for an English-speaking audience.
+The analysis of this data will help to show which particular jobs are most frequently posted, have the most amount of competition, when the City job market is likely to be slowest vs most dynamic, and which jobs tend to have the highest amount of diversity in their applicants.
 
-The data is updated on a weekly basis (Tuesdays), and consists of one CSV file of denormalized data that is constantly updated. This means that, instead of ingesting multiple files and merging them into each other, I will need to replace the entire data each time, as detection of differences would likely not be worth it since this is a relatively small dataset. This is done using batch processing, which will be orchestrated using Kestra.
+### General information on the data
+This data is only available in French, so some of my data transformation will be aimed at making it more understandable for an English-speaking audience using the Google Translate API.
+
+The data is updated on a weekly basis (Mondays or Tuesdays), and consists of one CSV file of denormalized data that is constantly updated. Data is fetched each Wednesday morning, and is brought into the Data Lake (GCS Bucket) and then transformed and loaded into the Data Warehouse, BigQuery. This is done by merging in new data based on hashes calculated to determine whether each row is new or not, and if it is not, whether or not the number of applicants has changed. Then, the job titles and administrative unit names and corresponding IDs are extracted, the new ones that have not yet been translated are extracted into TSV files, sent to the GCS Data Lake, processed by the Google Translate API, and converted back into CSV files and imported into BigQuery. This batch processing is orchestrated using Kestra.
 
 #### Data dictionary
 (Translated from the data dictionary [here](https://donnees.montreal.ca/dataset/offres-demploi-et-postulation#methodology))
@@ -38,13 +40,13 @@ The data is updated on a weekly basis (Tuesdays), and consists of one CSV file o
 ### Tech stack
 * Terraform - cloud infrastructure provisioning
 * Python - glue code
-* Kestra - Ingestion of batch data, transfer to data lake, then transform and loading of data into data warehouse
+* Kestra - Ingestion of batch data, transfer to data lake, then transform and loading of data into data warehouse, general orchestration of Google Translate API conversion
 * GCS - Data Lake
 * BigQuery - DWH
 * DBT - Data modeling
 * Google Looker Studio - Analytics
 
-*A unix-based OS, or at least the ability to run shell scripts and store things in the `~` folder, is assumed. If you are using Windows, please run this project using WSL2.*
+*A unix-based OS, or at least the ability to run shell scripts and store things in the `~` folder, is assumed. If you are using Windows, please run this project using WSL2, or ideally in a Linux VM.*
 
 ## Instructions
 #### Setup
