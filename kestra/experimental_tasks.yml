@@ -1,0 +1,123 @@
+  - id: extract_untranslated_to_new_tables
+    type: io.kestra.plugin.gcp.bigquery.Query
+    sql: |
+      with translated_jobtitles as (
+        select jobcode, jobtitle_fr from `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.dim_jobtitles`
+      ),
+      new_jobtitles as (
+        select * from `{{ secret('GCP_PROJECT_ID') }}.{{ vars.render(this_jobtitle_table_name) }}`
+      ),
+      untranslated_jobtitles as (
+        select * from new_jobtitles
+        except distinct
+        select * from translated_jobtitles
+      )
+      
+      create or replace table `{{ secret('GCP_PROJECT_ID') }}.{{ vars.render(this_jobtitle_table_name) }}_untranslated` AS (
+        select * from untranslated_jobtitles
+      );
+
+
+      with translated_adminunits as (
+        select adminunit, adminunit_fr from `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.dim_adminunits`
+      ),
+      new_adminunits as (
+        select * from `{{ secret('GCP_PROJECT_ID') }}.{{ vars.render(this_adminunit_table_name) }}`
+      ),
+      untranslated_adminunits as (
+        select * from new_adminunits
+        except distinct
+        select * from translated_adminunits
+      )
+      create or replace table `{{ secret('GCP_PROJECT_ID') }}.{{ vars.render(this_adminunit_table_name) }}_untranslated` AS (
+        select * from untranslated_adminunits
+      );
+    disabled: true
+
+  - id: extract_untranslatedtables_to_csv
+    type: io.kestra.plugin.scripts.python.Script
+    beforeCommands:
+      - pip install --upgrade google-cloud-bigquery google-cloud-translate
+      - echo "{{ secret('GCP_SERVICE_ACCOUNT') }}" > $HOME/.gcpcreds.json
+      - export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcpcreds.json"
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+    containerImage: python:splim
+    warningOnStdError: false
+    script: |
+      from google.cloud import bigquery
+
+      # things that will not change
+      client = bigquery.Client()
+      project = '{{ secret('GCP_PROJECT_ID') }}'
+      dataset_id = '{{ secret('GCP_DATASET') }}'
+      
+      # things that will change
+      table_id = '{{ vars.render(this_jobtitle_table_name) }}_untranslated'
+      destination_uri = '{{ vars.render(gcs_jobtitle_csv)}}'
+      dataset_ref = bigquery.DatasetReference(project, dataset_id)
+      table_ref = dataset_ref.table(table_id)
+
+      extract_job = client.extract_table(
+        table_ref,
+        destination_uri,
+        location="US"
+      )
+      extract_job.result()
+
+      table_id = '{{ vars.render(this_adminunit_table_name) }}_untranslated'
+      destination_uri = '{{ vars.render(gcs_adminunit_csv)}}'
+      dataset_ref = bigquery.DatasetReference(project, dataset_id)
+      table_ref = dataset_ref.table(table_id)
+
+      extract_job = client.extract_table(
+        table_ref,
+        destination_uri,
+        location="US"
+      )
+      extract_job.result()
+    disabled: true
+
+
+  - id: translate_adminunits
+    type: io.kestra.plugin.scripts.python.Script
+    beforeCommands:
+      - pip install --upgrade google-cloud-translate
+      - echo "{{ secret('GCP_SERVICE_ACCOUNT') }}" > $HOME/.gcpcreds.json
+      - export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcpcreds.json"
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+    containerImage: python:slim
+    warningOnStdError: false
+    script: |
+      from google.cloud import translate
+
+      input_uri = "{{ vars.render(gcs_adminunit_tsv) }}"
+      output_uri = "{{ vars.render(gcs_translate_outputfolder) }}"
+      project_id = "{{ secret('GCP_PROJECT_ID') }}"
+      timeout = 180
+
+      client = translate.TranslationServiceClient()
+
+      location = "us-central1"
+      gcs_source = {"input_uri": input_uri}
+
+      input_configs_element = {
+          "gcs_source": gcs_source,
+          "mime_type": "text/plain",
+      }
+      gcs_destination = {"output_uri_prefix": output_uri}
+      output_config = {"gcs_destination": gcs_destination}
+      parent = f"projects/{project_id}/locations/{location}"
+
+      operation = client.batch_translate_text(
+          request={
+              "parent": parent,
+              "source_language_code": "fr",
+              "target_language_codes": ["en"],
+              "input_configs": [input_configs_element],
+              "output_config": output_config,
+          }
+      )
+      response = operation.result(timeout)
+    disabled: true
