@@ -39,7 +39,7 @@ The data is updated on a weekly basis (Mondays or Tuesdays), and consists of one
 
 ### Tech stack
 * Terraform - cloud infrastructure provisioning
-* Python - glue code
+* Python - glue code for API
 * Kestra - Ingestion of batch data, transfer to data lake, then transform and loading of data into data warehouse, general orchestration of Google Translate API conversion
 * GCS - Data Lake
 * BigQuery - DWH
@@ -51,7 +51,7 @@ The data is updated on a weekly basis (Mondays or Tuesdays), and consists of one
 ## Instructions
 #### Setup
 1. Clone this git repo and make sure it is in your GitHub (will make it easier for DBT Cloud in the future).
-2. Create a GCP project, create a service user for your tenant with data owner for BigQuery and admin for GCS permissions, and save the JSON and the project ID and other relevant variables
+2. Create a GCP project, add the Google Translate API to your project, create a service user for your tenant with owner permissions (Needs to be able to manage BigQuery, GCS, and Google Translate API), and save the JSON and the project ID and other relevant variables.
 3. Fill out `terraform/variables.tf` with your GCP info
 4. Put your JSON with credentials to GCP at `~/.pki/gcp/creds.json`
 5. In "kestra" folder, create .env file with the following contents filled in with your GCP info:
@@ -67,8 +67,8 @@ GCP_LOCATION=yourlocation
 7. Run `terraform init`, then `terraform apply` in the `terraform` folder
 #### Loading into Data Lake and moving into DWH by batch processing
 8. Run `docker compose up` in the `kestra` folder
-9. Connect to Kestra at [localhost:8080](http://localhost:8080) and create a new flow.
-10. Copy and paste in the flow at `kestra/flow.yml`, save it, go to the "Triggers" tab of the flow, and execute a backfill covering the last Wednesday.
+9. Connect to Kestra at [localhost:8080](http://localhost:8080) and find the "villedemontreal_ingestion" flow.
+10. Go to the "Triggers" tab of the flow, and execute a backfill covering the last Wednesday.
 11. Verify that everything ran correctly and that there were no errors.
 #### Data Modeling with DBT
 12. Set up a new DBT Cloud project with the BigQuery connection we created previously, and a GitHub connection to your clone of this repo with the subdirectory `dbt`.

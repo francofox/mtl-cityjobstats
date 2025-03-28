@@ -3,4 +3,5 @@
 .env_encoded
 .terraform*
 terraform.*
+tutorial*.yml
 !dbt/seeds/*.csv
