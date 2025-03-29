@@ -10,7 +10,10 @@ variables:
   gcs_adminunit_tsv: "gs://{{ secret('GCP_BUCKET_NAME') }}/translatefrom/adminunit_{{ trigger.date | date('yyyy-MM-dd') }}.tsv"
   gcs_jobtitle_csv: "gs://{{ secret('GCP_BUCKET_NAME') }}/translatefrom/jobtitle_{{ trigger.date | date('yyyy-MM-dd') }}.csv"
   gcs_jobtitle_tsv: "gs://{{ secret('GCP_BUCKET_NAME') }}/translatefrom/jobtitle_{{ trigger.date | date('yyyy-MM-dd') }}.tsv"
-  gcs_translate_outputfolder: "gs://{{ secret('GCP_BUCKET_NAME') }}/translateoutput/"
+  gcs_translate_outputfolder_jobtitle: "gs://{{ secret('GCP_BUCKET_NAME') }}/trans_jobtitle_{{ trigger.date | date('yyyy-MM-dd') }}/"
+  gcs_translate_outputfolder_adminunit: "gs://{{ secret('GCP_BUCKET_NAME') }}/trans_adminunit_{{ trigger.date | date('yyyy-MM-dd') }}/"
+  gcs_translated_jobtitle_fname: "{{ secret('GCP_BUCKET_NAME') }}_translatefrom_jobtitle_{{ trigger.date | date('yyyy-MM-dd') }}_en_translations.tsv"
+  gcs_translated_adminunit_fname: "{{ secret('GCP_BUCKET_NAME') }}_translatefrom_adminunit_{{ trigger.date | date('yyyy-MM-dd') }}_en_translations.tsv"
   this_table_name: "{{ secret('GCP_DATASET') }}.jobdata_{{ trigger.date | date('yyyy-MM-dd')}}"
   this_jobtitle_table_name: "{{ secret('GCP_DATASET') }}.jobtitle_{{ trigger.date | date('yyyy-MM-dd') }}"
   this_adminunit_table_name: "{{ secret('GCP_DATASET') }}.adminunit_{{ trigger.date | date('yyyy-MM-dd') }}"
@@ -73,11 +76,13 @@ tasks:
     sql: |
       CREATE OR REPLACE VIEW `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}_tmp` AS (
         SELECT 
-          MD5(COALESCE(No_Affichage, "")
+          FARM_FINGERPRINT(COALESCE(No_Affichage, "")
             || COALESCE(CAST(Debut AS STRING), "")) AS row_id,
-          MD5(COALESCE(No_Affichage, "") 
+          FARM_FINGERPRINT(COALESCE(No_Affichage, "") 
             || COALESCE(CAST (Debut AS STRING), "") 
             || COALESCE(CAST(Nombre_Postulant AS STRING), "")) AS unique_id,
+          FARM_FINGERPRINT(COALESCE(Description_Unite, "")
+            || COALESCE(CAST(Unite AS STRING), "")) AS adminunit_id,
           *
         FROM `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_table_name) }}`
       );
@@ -87,8 +92,9 @@ tasks:
     sql: |
       CREATE TABLE IF NOT EXISTS `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.jobdata`
       (
-        row_id BYTES OPTIONS (description="Row ID, calculated off the 'Debut' and 'No_Affichage' fields."),
-        unique_id BYTES OPTIONS (description="Uniqueness ID, for determining which rows have changed for merging into. Calculated off the 'Debut', 'Nombre_Postulant' and 'No_Affichage' fields."),
+        row_id INTEGER OPTIONS (description="Row ID, calculated off the 'Debut' and 'No_Affichage' fields."),
+        unique_id INTEGER OPTIONS (description="Uniqueness ID, for determining which rows have changed for merging into. Calculated off the 'Debut', 'Nombre_Postulant' and 'No_Affichage' fields."),
+        adminunit_id INTEGER OPTIONS (description="Admin Unit ID, for translation purposes. Calculated off of 'Unite' and 'Description_Unite'."),
         Unite_Niveau1 INTEGER OPTIONS (description="(Unit Level 1) The service unit or borough ID"),
         Description_Unite_Niveau1 STRING OPTIONS (description="(en: Description_Unit_L1) Name of the Unit Level 1 service unit or borough"),
         Unite INTEGER OPTIONS (description="(en: Administrative Unit) The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"),
@@ -124,13 +130,13 @@ tasks:
           Nombre_Autochtone = tmp.Nombre_Autochtone,
           Nombre_Minorite_Ethnique = tmp.Nombre_Minorite_Ethnique
       WHEN NOT MATCHED THEN
-        INSERT (row_id, unique_id, Unite_Niveau1, Description_Unite_Niveau1, Unite, Description_Unite, Accreditation, Description_Accreditation, Titre, Emploi, No_Affichage, Debut, Fin, Interne_Externe, Nombre_Postulant, Nombre_Femme, Nombre_Handicape, Nombre_Minorite_Visible, Nombre_Autochtone, Nombre_Minorite_Ethnique)
-        VALUES (tmp.row_id, tmp.unique_id, tmp.Unite_Niveau1, tmp.Description_Unite_Niveau1, tmp.Unite, tmp.Description_Unite, tmp.Accreditation, tmp.Description_Accreditation, tmp.Titre, tmp.Emploi, tmp.No_Affichage, tmp.Debut, tmp.Fin, tmp.Interne_Externe, tmp.Nombre_Postulant, tmp.Nombre_Femme, tmp.Nombre_Handicape, tmp.Nombre_Minorite_Visible, tmp.Nombre_Autochtone, tmp.Nombre_Minorite_Ethnique);
+        INSERT (row_id, unique_id, adminunit_id, Unite_Niveau1, Description_Unite_Niveau1, Unite, Description_Unite, Accreditation, Description_Accreditation, Titre, Emploi, No_Affichage, Debut, Fin, Interne_Externe, Nombre_Postulant, Nombre_Femme, Nombre_Handicape, Nombre_Minorite_Visible, Nombre_Autochtone, Nombre_Minorite_Ethnique)
+        VALUES (tmp.row_id, tmp.unique_id, tmp.adminunit_id, tmp.Unite_Niveau1, tmp.Description_Unite_Niveau1, tmp.Unite, tmp.Description_Unite, tmp.Accreditation, tmp.Description_Accreditation, tmp.Titre, tmp.Emploi, tmp.No_Affichage, tmp.Debut, tmp.Fin, tmp.Interne_Externe, tmp.Nombre_Postulant, tmp.Nombre_Femme, tmp.Nombre_Handicape, tmp.Nombre_Minorite_Visible, tmp.Nombre_Autochtone, tmp.Nombre_Minorite_Ethnique);
 
   - id: extract_jobtitles_as_table
     type: io.kestra.plugin.gcp.bigquery.Query
     sql: |
-      CREATE OR REPLACE TABLE `{{ secret('GCP_PROJECT_ID') }}.{{ vars.render(this_jobtitle_table_name) }}` AS (
+      CREATE OR REPLACE TABLE `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_jobtitle_table_name) }}` AS (
         select 
           distinct Emploi as jobcode,
           Titre as jobtitle
@@ -139,9 +145,9 @@ tasks:
   - id: extract_adminunits_as_table
     type: io.kestra.plugin.gcp.bigquery.Query
     sql: |
-      CREATE OR REPLACE TABLE `{{ secret('GCP_PROJECT_ID') }}.{{ vars.render(this_adminunit_table_name) }}` AS (
+      CREATE OR REPLACE TABLE `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_adminunit_table_name) }}` AS (
         select 
-          distinct Unite as adminunit,
+          adminunit_id,
           Description_Unite as adminunit_desc
         from `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.jobdata`
       );
@@ -150,7 +156,7 @@ tasks:
     type: io.kestra.plugin.gcp.bigquery.Query
     sql: |
       create table if not exists `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.dim_adminunits` (
-        adminunit integer options(description="Administrative Unit ID"),
+        adminunit_id integer options(description="Administrative Unit ID"),
         adminunit_fr string options(description="Original Administrative Unit description in French"),
         adminunit_en string options(description="Translated Administrative Unit description in English (by Google Translate API)")
       );
@@ -167,7 +173,7 @@ tasks:
         select jobcode, jobtitle_fr from `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.dim_jobtitles`
       ),
       new_jobtitles as (
-        select * from `{{ secret('GCP_PROJECT_ID') }}.{{ vars.render(this_jobtitle_table_name) }}`
+        select * from `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_jobtitle_table_name) }}`
       ),
       untranslated_jobtitles as (
         select * from new_jobtitles
@@ -178,14 +184,105 @@ tasks:
       select * from untranslated_jobtitles
     store: true
 
+  - id: if_untranslated_jobtitles
+    type: io.kestra.plugin.core.flow.If
+    condition: "{{ outputs.extract_untranslated_jobtitles.size > 0 }}"
+    then:
+      - id: write_jobtitles_to_tsv
+        type: io.kestra.plugin.serdes.csv.IonToCsv
+        from: "{{ outputs.extract_untranslated_jobtitles.uri }}"
+        fieldSeparator: "\t"
+        header: false
+
+      - id: upload_jobtitles_to_gcp
+        type: io.kestra.plugin.gcp.gcs.Upload
+        from: "{{ outputs.write_jobtitles_to_tsv.uri }}"
+        to: "{{ render(vars.gcs_jobtitle_tsv) }}"
+
+      - id: delete_if_exists_translation_target_jobtitle
+        type: io.kestra.plugin.gcp.gcs.Delete
+        uri: "{{ render(vars.gcs_translate_outputfolder_jobtitle) }}{{ render(vars.gcs_translated_jobtitle_fname)}}"
+      
+      - id: delete_if_exists_transtrarget_jobtitle_indexcsv
+        type: io.kestra.plugin.gcp.gcs.Delete
+        uri: "{{ render(vars.gcs_translate_outputfolder_jobtitle) }}index.csv"
+
+      - id: translate_jobtitles
+        type: io.kestra.plugin.scripts.python.Script
+        inputFiles:
+          creds.json: |
+            {{ secret('GCP_SERVICE_ACCOUNT') }}
+        beforeCommands:
+          - pip install --upgrade google-cloud-translate
+          - export GOOGLE_APPLICATION_CREDENTIALS="`pwd`/creds.json"
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+        containerImage: python:slim
+        script: |
+          from google.cloud import translate
+
+          input_uri = "{{ render(vars.gcs_jobtitle_tsv) }}"
+          output_uri = "{{ render(vars.gcs_translate_outputfolder_jobtitle) }}"
+          project_id = "{{ secret('GCP_PROJECT_ID') }}"
+          timeout = 180
+
+          client = translate.TranslationServiceClient()
+
+          location = "us-central1"
+          gcs_source = {"input_uri": input_uri}
+
+          input_configs_element = {
+              "gcs_source": gcs_source,
+              "mime_type": "text/plain",
+          }
+          gcs_destination = {"output_uri_prefix": output_uri}
+          output_config = {"gcs_destination": gcs_destination}
+          parent = f"projects/{project_id}/locations/{location}"
+
+          operation = client.batch_translate_text(
+              request={
+                  "parent": parent,
+                  "source_language_code": "fr",
+                  "target_language_codes": ["en"],
+                  "input_configs": [input_configs_element],
+                  "output_config": output_config,
+              }
+          )
+          response = operation.result(timeout)
+
+      - id: create_ext_jobtitle_table
+        type: io.kestra.plugin.gcp.bigquery.Query
+        sql: |
+          create or replace external table `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.temp_jobtitles_{{ trigger.date | date('yyyy-MM-dd') }}` (
+            jobcode int64,
+            jobtitle_fr string,
+            jobtitle_en string
+          )
+          options (
+            description = "Job codes with original French job title and English translation (by Google Translate API)",
+            uris = ['{{ render(vars.gcs_translate_outputfolder_jobtitle) }}{{ render(vars.gcs_translated_jobtitle_fname) }}'],
+            format = "CSV",
+            field_delimiter = "\t"
+          );
+
+      - id: merge_into_dim_jobtitles
+        type: io.kestra.plugin.gcp.bigquery.Query
+        sql: |
+          merge into `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.dim_jobtitles` as main
+          using `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.temp_jobtitles_{{ trigger.date | date('yyyy-MM-dd') }}` as tmp
+          on main.jobcode = tmp.jobcode
+          when not matched then
+            insert (jobcode, jobtitle_fr, jobtitle_en)
+            values (tmp.jobcode, tmp.jobtitle_fr, tmp.jobtitle_en);
+
   - id: extract_untranslated_adminunits
     type: io.kestra.plugin.gcp.bigquery.Query
     sql: |
       with translated_adminunits as (
-        select adminunit, adminunit_fr from `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.dim_adminunits`
+        select adminunit_id, adminunit_fr from `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.dim_adminunits`
       ),
       new_adminunits as (
-        select * from `{{ secret('GCP_PROJECT_ID') }}.{{ vars.render(this_adminunit_table_name) }}`
+        select adminunit_id, adminunit_desc as adminunit_fr from `{{ secret('GCP_PROJECT_ID') }}.{{ render(vars.this_adminunit_table_name) }}`
       ),
       untranslated_adminunits as (
         select * from new_adminunits
@@ -195,119 +292,97 @@ tasks:
       select * from untranslated_adminunits
     store: true
 
-  - id: write_jobtitles_to_tsv
-    type: io.kestra.plugin.serdes.csv.IonToCsv
-    from: "{{ outputs.extract_untranslated_jobtitles.uri }}"
-    fieldSeparator: "\t"
+  - id: if_untranslated_adminunits
+    type: io.kestra.plugin.core.flow.If
+    condition: "{{ outputs.extract_untranslated_adminunits.size > 0 }}"
+    then:
+      - id: write_adminunits_to_tsv
+        type: io.kestra.plugin.serdes.csv.IonToCsv
+        from: "{{ outputs.extract_untranslated_adminunits.uri }}"
+        fieldSeparator: "\t"
+        header: false
 
-  - id: write_adminunits_to_tsv
-    type: io.kestra.plugin.serdes.csv.IonToCsv
-    from: "{{ outputs.extract_untranslated_adminunits.uri }}"
-    fieldSeparator: "\t"
+      - id: upload_adminunits_to_gcp
+        type: io.kestra.plugin.gcp.gcs.Upload
+        from: "{{ outputs.write_adminunits_to_tsv.uri }}"
+        to: "{{ render(vars.gcs_adminunit_tsv) }}"
 
-  - id: upload_adminunits_to_gcp
-    type: io.kestra.plugin.gcp.gcs.Upload
-    from: "{{ outputs.write_adminunits_to_tsv.uri }}"
-    to: "{{ vars.render(gcs_adminunit_tsv) }}"
+      - id: delete_if_exists_translation_target_adminunit
+        type: io.kestra.plugin.gcp.gcs.Delete
+        uri: "{{ render(vars.gcs_translate_outputfolder_adminunit) }}{{ render(vars.gcs_translated_adminunit_fname)}}"
+      
+      - id: delete_if_exists_transtrarget_adminunit_indexcsv
+        type: io.kestra.plugin.gcp.gcs.Delete
+        uri: "{{ render(vars.gcs_translate_outputfolder_adminunit) }}index.csv"
 
-  - id: upload_jobtitles_to_gcp
-    type: io.kestra.plugin.gcp.gcs.Upload
-    from: "{{ outputs.write_jobtitles_to_tsv.uri }}"
-    to: "{{ vars.render(gcs_jobtitle_tsv) }}"
+      - id: translate_adminunits
+        type: io.kestra.plugin.scripts.python.Script
+        inputFiles:
+          creds.json: |
+            {{ secret('GCP_SERVICE_ACCOUNT') }}
+        beforeCommands:
+          - pip install --upgrade google-cloud-translate
+          - export GOOGLE_APPLICATION_CREDENTIALS="`pwd`/creds.json"
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+        containerImage: python:slim
+        script: |
+          from google.cloud import translate
 
-  - id: translate_adminunits
-    type: io.kestra.plugin.scripts.python.Script
-    beforeCommands:
-      - pip install --upgrade google-cloud-translate
-      - echo "{{ secret('GCP_SERVICE_ACCOUNT') }}" > $HOME/.gcpcreds.json
-      - export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcpcreds.json"
-    taskRunner:
-      type: io.kestra.plugin.scripts.runner.docker.Docker
-    containerImage: python:slim
-    warningOnStdError: false
-    script: |
-      from google.cloud import translate
+          input_uri = "{{ render(vars.gcs_adminunit_tsv) }}"
+          output_uri = "{{ render(vars.gcs_translate_outputfolder_adminunit) }}"
+          project_id = "{{ secret('GCP_PROJECT_ID') }}"
+          timeout = 180
 
-      input_uri = "{{ vars.render(gcs_adminunit_tsv) }}"
-      output_uri = "{{ vars.render(gcs_translate_outputfolder) }}"
-      project_id = "{{ secret('GCP_PROJECT_ID') }}"
-      timeout = 180
+          client = translate.TranslationServiceClient()
 
-      client = translate.TranslationServiceClient()
+          location = "us-central1"
+          gcs_source = {"input_uri": input_uri}
 
-      location = "us-central1"
-      gcs_source = {"input_uri": input_uri}
-
-      input_configs_element = {
-          "gcs_source": gcs_source,
-          "mime_type": "text/plain",
-      }
-      gcs_destination = {"output_uri_prefix": output_uri}
-      output_config = {"gcs_destination": gcs_destination}
-      parent = f"projects/{project_id}/locations/{location}"
-
-      operation = client.batch_translate_text(
-          request={
-              "parent": parent,
-              "source_language_code": "fr",
-              "target_language_codes": ["en"],
-              "input_configs": [input_configs_element],
-              "output_config": output_config,
+          input_configs_element = {
+              "gcs_source": gcs_source,
+              "mime_type": "text/plain",
           }
-      )
-      response = operation.result(timeout)
+          gcs_destination = {"output_uri_prefix": output_uri}
+          output_config = {"gcs_destination": gcs_destination}
+          parent = f"projects/{project_id}/locations/{location}"
 
-  - id: translate_jobtitles
-    type: io.kestra.plugin.scripts.python.Script
-    beforeCommands:
-      - pip install --upgrade google-cloud-translate
-      - echo "{{ secret('GCP_SERVICE_ACCOUNT') }}" > $HOME/.gcpcreds.json
-      - export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcpcreds.json"
-    taskRunner:
-      type: io.kestra.plugin.scripts.runner.docker.Docker
-    containerImage: python:slim
-    warningOnStdError: false
-    script: |
-      from google.cloud import translate
+          operation = client.batch_translate_text(
+              request={
+                  "parent": parent,
+                  "source_language_code": "fr",
+                  "target_language_codes": ["en"],
+                  "input_configs": [input_configs_element],
+                  "output_config": output_config,
+              }
+          )
+          response = operation.result(timeout)
 
-      input_uri = "{{ vars.render(gcs_jobtitle_tsv) }}"
-      output_uri = "{{ vars.render(gcs_translate_outputfolder) }}"
-      project_id = "{{ secret('GCP_PROJECT_ID') }}"
-      timeout = 180
+      - id: create_ext_adminunit_table
+        type: io.kestra.plugin.gcp.bigquery.Query
+        sql: |
+          create or replace external table `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.temp_adminunits_{{ trigger.date | date('yyyy-MM-dd') }}` (
+            adminunit_id integer,
+            adminunit_fr string,
+            adminunit_en string
+          )
+          options (
+            description = "Admin Units with original French description and English translation (by Google Translate API)",
+            uris = ['{{ render(vars.gcs_translate_outputfolder_adminunit) }}{{ render(vars.gcs_translated_adminunit_fname) }}'],
+            format = "CSV",
+            field_delimiter = "\t"
+          );
 
-      client = translate.TranslationServiceClient()
+      - id: merge_into_dim_adminunits
+        type: io.kestra.plugin.gcp.bigquery.Query
+        sql: |
+          merge into `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.dim_adminunits` as main
+          using `{{ secret('GCP_PROJECT_ID') }}.{{ secret('GCP_DATASET') }}.temp_adminunits_{{ trigger.date | date('yyyy-MM-dd') }}` as tmp
+          on main.adminunit_id = tmp.adminunit_id
+          when not matched then
+          insert (adminunit_id, adminunit_fr, adminunit_en)
+          values (tmp.adminunit_id, tmp.adminunit_fr, tmp.adminunit_en);
 
-      location = "us-central1"
-      gcs_source = {"input_uri": input_uri}
-
-      input_configs_element = {
-          "gcs_source": gcs_source,
-          "mime_type": "text/plain",
-      }
-      gcs_destination = {"output_uri_prefix": output_uri}
-      output_config = {"gcs_destination": gcs_destination}
-      parent = f"projects/{project_id}/locations/{location}"
-
-      operation = client.batch_translate_text(
-          request={
-              "parent": parent,
-              "source_language_code": "fr",
-              "target_language_codes": ["en"],
-              "input_configs": [input_configs_element],
-              "output_config": output_config,
-          }
-      )
-      response = operation.result(timeout)
-
-  - id: download_resultant_tsvs
-
-  - id: convert_tsvs_to_csvs
-
-  - id: upload_translated_csvs
-
-  - id: merge_translated_csvs
-
-  - id: if query is blank, leave it and do not translate/convert anything
   - id: purge_files
     type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
 

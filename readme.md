@@ -2,17 +2,19 @@
 This project uses the data from the [Montréal Open Data site (Données ouvertes de la Ville de Montréal)](https://donnees.montreal.ca) on their SimenLigne Oracle job posting system. This data is available here:
 https://donnees.montreal.ca/dataset/offres-demploi-et-postulation
 
-This project is a capstone project in the DataTalksClub free Data Engineering Zoomcamp. A huge thank you to all of the contributors to this course. It is really insane that this sort of resource can be offered for free to the general public. 
+This project is a capstone project in the [DataTalksClub](https://datatalks.club/) free [Data Engineering Zoomcamp](https://github.com/DataTalksClub/data-engineering-zoomcamp). A huge thank you to all of the contributors to this course. It is really insane that this sort of high-quality resource can be offered free of charge to the general public.
 
 ### Problem this solves
 This data contains almost all of the data of job postings and their applicants for jobs at the City of Montreal Government. This is one of the main employers in Montreal, and is reputed for the stability, pay, and benefits afforded to its employees, as well as the upward and sideways mobility possible within the organization. For this reason, City jobs are highly coveted and competitive. If one would like to build their career at the City, any and all information on the availability of and competition for different jobs is very useful.
 
-The analysis of this data will help to show which particular jobs are most frequently posted, have the most amount of competition, when the City job market is likely to be slowest vs most dynamic, and which jobs tend to have the highest amount of diversity in their applicants.
+The analysis of this data will help to show which particular jobs are most frequently posted, have the most amount of competition, when City Government hiring is likely to be slowest vs most dynamic, and which jobs tend to have the highest amount of diversity in their applicants.
 
 ### General information on the data
-This data is only available in French, so some of my data transformation will be aimed at making it more understandable for an English-speaking audience using the Google Translate API.
+This data is only available in French, so some of my data transformation will be aimed at making it more understandable for an English-speaking audience using the Google Translate API. (Quality of the translation is entirely up to Google Translate. If there is doubt about what something means, please refer to the French version)
 
-The data is updated on a weekly basis (Mondays or Tuesdays), and consists of one CSV file of denormalized data that is constantly updated. Data is fetched each Wednesday morning, and is brought into the Data Lake (GCS Bucket) and then transformed and loaded into the Data Warehouse, BigQuery. This is done by merging in new data based on hashes calculated to determine whether each row is new or not, and if it is not, whether or not the number of applicants has changed. Then, the job titles and administrative unit names and corresponding IDs are extracted, the new ones that have not yet been translated are extracted into TSV files, sent to the GCS Data Lake, processed by the Google Translate API, and converted back into CSV files and imported into BigQuery. This batch processing is orchestrated using Kestra.
+The data is updated on a weekly basis (Mondays or Tuesdays), and consists of one CSV file of denormalized data that is constantly updated. Data is fetched early each Wednesday morning, and is brought into the Data Lake (GCS Bucket) and then transformed and loaded into the Data Warehouse, BigQuery. This is done by merging in new data based on hashes calculated to determine whether each row is new or not, and if it is not, whether or not the number of applicants has changed. Then, the job titles and administrative unit names and corresponding IDs are extracted (and generated, in the case of the admin units, as the 'admin unit number' given is not unique), the new ones that have not yet been translated are extracted into TSV files, sent to the GCS Data Lake, processed by the Google Translate API, and imported into BigQuery. This batch processing is orchestrated using Kestra.
+
+Shorter translation of Work Classifications and Level 1 Units was done manually by me, as they will not likely be added to or changed, and is provided using seeds in dbt.
 
 #### Data dictionary
 (Translated from the data dictionary [here](https://donnees.montreal.ca/dataset/offres-demploi-et-postulation#methodology))
@@ -42,7 +44,7 @@ The data is updated on a weekly basis (Mondays or Tuesdays), and consists of one
 * Python - glue code
 * Kestra - Ingestion of batch data, transfer to data lake, then transform and loading of data into data warehouse, general orchestration of Google Translate API conversion
 * GCS - Data Lake
-* BigQuery - DWH
+* BigQuery - Data warehouse
 * DBT - Data modeling
 * Google Looker Studio - Analytics
 
@@ -51,10 +53,10 @@ The data is updated on a weekly basis (Mondays or Tuesdays), and consists of one
 ## Instructions
 #### Setup
 1. Clone this git repo and make sure it is in your GitHub (will make it easier for DBT Cloud in the future).
-2. Create a GCP project, create a service user for your tenant with data owner for BigQuery and admin for GCS permissions, and save the JSON and the project ID and other relevant variables
+2. Create a GCP project, add the Google Translate API to your project, create a service user for your tenant with owner permissions (Needs to be able to manage BigQuery, GCS, and Google Translate API), and save the JSON and the project ID and other relevant variables.
 3. Fill out `terraform/variables.tf` with your GCP info
 4. Put your JSON with credentials to GCP at `~/.pki/gcp/creds.json`
-5. In "kestra" folder, create .env file with the following contents filled in with your GCP info:
+5. In the "kestra" folder, create `.env` file with the following contents filled in with your GCP info:
 ```
 GCP_BUCKET_NAME=yourbucket
 GCP_DATASET=yourdataset
@@ -62,15 +64,15 @@ GCP_PROJECT_ID=yourprojid
 GCP_LOCATION=yourlocation
 ```
 
-6. Run the `kestra/convert_env_to_encoded.py` script
+6. Run the `kestra/convert_env_to_encoded.py` script to create the `.env_encoded` file with the required secrets for Kestra
 #### Terraforming our environment
 7. Run `terraform init`, then `terraform apply` in the `terraform` folder
 #### Loading into Data Lake and moving into DWH by batch processing
 8. Run `docker compose up` in the `kestra` folder
-9. Connect to Kestra at [localhost:8080](http://localhost:8080) and create a new flow.
-10. Copy and paste in the flow at `kestra/flow.yml`, save it, go to the "Triggers" tab of the flow, and execute a backfill covering the last Wednesday.
+9. Connect to Kestra at [localhost:8080](http://localhost:8080) and find the "villedemontreal_ingestion" flow, which should already be available there.
+10. Go to the "Triggers" tab of the flow, and execute a backfill covering the last Wednesday.
 11. Verify that everything ran correctly and that there were no errors.
 #### Data Modeling with DBT
-12. Set up a new DBT Cloud project with the BigQuery connection we created previously, and a GitHub connection to your clone of this repo with the subdirectory `dbt`.
+12. Set up a new DBT Cloud project with the BigQuery connection we created previously, and a GitHub connection to your clone of this repo with the subdirectory `dbt` selected.
 13. Change the variables in the `dbt_project.yml` file so that they point to your BigQuery database and dataset. Alternatively, build the models using `dbt build --vars '{bq_db: your_bq_database, bq_ds: your_bq_dataset}'`, corresponding to the dataset containing the `jobdata` table.
 
