@@ -1,6 +1,11 @@
 {{
     config(
-        materialized='table'
+        materialized='table',
+        partition_by={
+            "field": "start_date",
+            "data_type": "date",
+            "granularity": "month"
+        }
     )
 }}
 
@@ -9,7 +14,7 @@ with jobdata as (
 ),
 
 jobcodes as (
-    select * from {{ ref('dim_jobcodes') }}
+    select * from {{ ref('dim_jobtitles') }}
 ),
 
 classifications as (
@@ -18,28 +23,34 @@ classifications as (
 
 lv1units as (
     select * from {{ ref('dim_lv1units') }}
-)
+),
+
+au as (
+    select * from {{ ref('dim_adminunits') }}
+),
 
 compiled as (
     select 
         jobid,
-        unit_lv1,
-        unit_lv1_desc as unit_lv1_fr,
+        jobdata.unit_lv1 as unit_lv1,
+        jobdata.unit_lv1_desc as unit_lv1_fr,
         lv1units.unit_lv1_en as unit_lv1_en,
         
-        adminunit,
-        adminunit_desc,
+        jobdata.adminunit_id as adminunit_id,
+        jobdata.adminunit as adminunit,
+        jobdata.adminunit_desc as adminunit_fr,
+        au.adminunit_en as adminunit_en,
 
-        classif,
-        classif_desc as classif_fr,
-        classifications.classif_en,
+        jobdata.classif,
+        jobdata.classif_desc as classif_fr,
+        classifications.classif_en as classif_en,
 
-        case when internal_external = "Interne/Externe" then "Internal/External" else "Internal" as internal_external,
+        case when internal_external = "Interne/Externe" then "Internal/External" else "Internal" end as internal_external,
         
-        jobtitle as jobtitle_fr,
+        jobdata.jobcode,        
+        jobdata.jobtitle as jobtitle_fr,
         jobcodes.jobtitle_en as jobtitle_en,
-        jobcode,
-        
+
         posting_num,
         start_date,
         end_date,
@@ -54,6 +65,7 @@ compiled as (
     left join jobcodes on jobdata.jobcode = jobcodes.jobcode
     left join lv1units on jobdata.unit_lv1 = lv1units.unit_lv1
     left join classifications on jobdata.classif = classifications.classif
+    left join au on jobdata.adminunit_id = au.adminunit_id
 )
 
 select * from compiled

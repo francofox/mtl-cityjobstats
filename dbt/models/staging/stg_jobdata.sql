@@ -15,6 +15,7 @@ renamed as (
         -- Job unit and classification data
         {{ dbt.safe_cast("Unite_Niveau1", api.Column.translate_type("integer")) }} as unit_lv1,
         {{ dbt.safe_cast("Description_Unite_Niveau1", api.Column.translate_type("string")) }} as unit_lv1_desc,
+        {{ dbt.safe_cast("adminunit_id", api.Column.translate_type("integer")) }} as adminunit_id,
         {{ dbt.safe_cast("Unite", api.Column.translate_type("integer")) }} as adminunit,
         {{ dbt.safe_cast("Description_Unite", api.Column.translate_type("string")) }} as adminunit_desc,
         {{ dbt.safe_cast("Accreditation", api.Column.translate_type("integer")) }} as classif,
@@ -37,8 +38,7 @@ renamed as (
         {{ dbt.safe_cast("Nombre_Autochtone", api.Column.translate_type("integer")) }} as num_indigenous,
         {{ dbt.safe_cast("Nombre_Minorite_Ethnique", api.Column.translate_type("integer")) }} as num_ethnicminority
     
-    from source 
-    where start_date is not null
+    from source
 )
 
 select * from renamed
