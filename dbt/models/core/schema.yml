@@ -21,6 +21,10 @@ models:
         data_type: string
         description: "(EN) Name of the Unit Level 1 service unit or borough"
 
+      - name: adminunit_id
+        data_type: int64
+        description: "Id for identifying the Administrative Unit, separate from the 'adminunit' field since that contains duplicates. Id was calculated as a hash off the admin unit and description."
+     
       - name: adminunit
         data_type: int64
         description: "The administrative unit is the business unit where the job posting was created. It is represented by 12 significant digits, of which the first two represent the service unit or borough. The numbering represents a structured hierarchy(ex: Service, director, division, section)"
@@ -108,7 +112,7 @@ models:
         data_type: string
         description: "Translated Classification description in English (by Google Translate API)"
 
-  - name: dim_jobcodes
+  - name: dim_jobtitles
     description: "Translated Job titles"
     columns:
       - name: jobcode
@@ -137,3 +141,18 @@ models:
       - name: unit_lv1_en
         data_type: string
         description: "Translated Lv 1 Unit Description in English (by Google Translate API)"
+
+  - name: dim_adminunits
+    description: "Translated administrative unit names"
+    columns:
+      - name: adminunit_id
+        data_type: int64
+        description: "Id for administrative units, calculated separately from the adminunit and adminunit_desc since the adminunit number is not unique."
+        
+      - name: adminunit_fr
+        data_type: string
+        description: "Original description of the administrative unit, in French"
+
+      - name: adminunit_en
+        data_type: string
+        description: "Translated description of the administrative unit in English, courtesy of the Google Translate API."

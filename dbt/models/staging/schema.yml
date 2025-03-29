@@ -7,6 +7,8 @@ sources:
 
     tables:
       - name: jobdata
+      - name: dim_jobtitles
+      - name: dim_adminunits
 
 models:
   - name: stg_jobdata
@@ -23,6 +25,10 @@ models:
       - name: unit_lv1_desc
         data_type: string
         description: "Name of the Unit Level 1 service unit or borough"
+
+      - name: adminunit_id
+        data_type: int64
+        description: "Administrative unit id for joining, based on hash calculated off adminunit and adminunit_desc"
 
       - name: adminunit
         data_type: int64
