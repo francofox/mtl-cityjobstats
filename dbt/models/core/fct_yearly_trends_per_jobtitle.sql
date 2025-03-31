@@ -19,6 +19,6 @@ select
     jobtitle,
     jobcode,
     month_of_posting,
-    avg(num_postings)
+    avg(num_postings) as average_postings
 from gen_info
 group by 1, 2, 3
