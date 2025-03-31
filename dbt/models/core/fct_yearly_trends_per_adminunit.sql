@@ -12,13 +12,13 @@ with gen_info as (
         adminunit_en as adminunit,
         count(*) as num_postings
     from {{ ref('fct_jobpostings') }}
-    group by 1, 2, 3, 4, 5, 6
+    group by 1, 2, 3, 4
 )
 
 select 
     adminunit,
     adminunit_number,
     month_of_posting,
-    avg(num_postings)
+    avg(num_postings) as average_postings
 from gen_info
 group by 1, 2, 3

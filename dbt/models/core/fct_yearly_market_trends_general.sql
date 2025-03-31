@@ -18,5 +18,6 @@ with gen_info as (
 )
 select
     month_of_posting,
-    avg(num_postings)
+    avg(num_postings) as average_postings
 from gen_info
+group by 1
