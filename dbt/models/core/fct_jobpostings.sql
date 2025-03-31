@@ -53,6 +53,8 @@ compiled as (
 
         posting_num,
         start_date,
+        extract(month from start_date) as start_date_month,
+        extract(year from start_date) as start_date_year,
         end_date,
 
         num_applying,
