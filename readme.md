@@ -87,7 +87,7 @@ GCP_LOCATION=yourlocation
 #### Analytics with Looker Studio
 15. Open Looker Studio and create a new dashboard with the fact models `fct_applicant_demography_per_job`, `fct_yearly_trends_per_lv1unit`, and `fct_yearly_trends_per_jobtitle` attached from BigQuery.
 16. Create the line and bar charts in my [final product](https://lookerstudio.google.com/reporting/694eaf63-3b28-491b-8957-aafcdfb1425c), with the dropdowns to select Level 1 Units and Job titles: 
-![Screenshot of pg 1](/assets/images/pg1.png)
+![Screenshot of pg 1](/pg1.png)
 
-![Screenshot of pg 2](/assets/images/pg2.png)
+![Screenshot of pg 2](/pg2.png)
 
