@@ -9,6 +9,14 @@ This data contains almost all of the data of job postings and their applicants f
 
 The analysis of this data will help to show which particular jobs are most frequently posted, have the most amount of competition, when City Government hiring is likely to be slowest vs most dynamic, and which jobs tend to have the highest amount of diversity in their applicants.
 
+### Final dashboard product
+Here is a link to the final dashboard product:
+https://lookerstudio.google.com/reporting/694eaf63-3b28-491b-8957-aafcdfb1425c
+
+The first page contains monthly averages for different jobs and administrative units. This can be expanded with other models I created in SQL, to allow for other factors to be taken into account, such as administrative unit. Please use the dropdown menus to choose which Lv 1 Unit and Job Titles you want to compare.
+
+The second page contains demographic information per job title, which can be selected and compared using the dropdown menus.
+
 ### General information on the data
 This data is only available in French, so some of my data transformation will be aimed at making it more understandable for an English-speaking audience using the Google Translate API. (Quality of the translation is entirely up to Google Translate. If there is doubt about what something means, please refer to the French version)
 
@@ -45,7 +53,7 @@ Shorter translation of Work Classifications and Level 1 Units was done manually 
 * Kestra - Ingestion of batch data, transfer to data lake, then transform and loading of data into data warehouse, general orchestration of Google Translate API conversion
 * GCS - Data Lake
 * BigQuery - Data warehouse
-* DBT - Data modeling
+* dbt - Data modeling
 * Google Looker Studio - Analytics
 
 *A unix-based OS, or at least the ability to run shell scripts and store things in the `~` folder, is assumed. If you are using Windows, please run this project using WSL2, or ideally in a Linux VM.*
@@ -72,7 +80,14 @@ GCP_LOCATION=yourlocation
 9. Connect to Kestra at [localhost:8080](http://localhost:8080) and find the "villedemontreal_ingestion" flow, which should already be available there.
 10. Go to the "Triggers" tab of the flow, and execute a backfill covering the last Wednesday.
 11. Verify that everything ran correctly and that there were no errors.
-#### Data Modeling with DBT
-12. Set up a new DBT Cloud project with the BigQuery connection we created previously, and a GitHub connection to your clone of this repo with the subdirectory `dbt` selected.
+#### Data Modeling with dbt
+12. Set up a new dbt Cloud project with the BigQuery connection we created previously, and a GitHub connection to your clone of this repo with the subdirectory `dbt` selected.
 13. Change the variables in the `dbt_project.yml` file so that they point to your BigQuery database and dataset. Alternatively, build the models using `dbt build --vars '{bq_db: your_bq_database, bq_ds: your_bq_dataset}'`, corresponding to the dataset containing the `jobdata` table.
+14. Optionally, set up a production deployment environment in your dbt Cloud account to build and run every so often. 
+#### Analytics with Looker Studio
+15. Open Looker Studio and create a new dashboard with the fact models `fct_applicant_demography_per_job`, `fct_yearly_trends_per_lv1unit`, and `fct_yearly_trends_per_jobtitle` attached from BigQuery.
+16. Create the line and bar charts in my [final product](https://lookerstudio.google.com/reporting/694eaf63-3b28-491b-8957-aafcdfb1425c), with the dropdowns to select Level 1 Units and Job titles: 
+![Screenshot of pg 1](/assets/images/pg1.png)
+
+![Screenshot of pg 2](/assets/images/pg2.png)
 
