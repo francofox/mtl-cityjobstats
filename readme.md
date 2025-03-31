@@ -12,7 +12,9 @@ The analysis of this data will help to show which particular jobs are most frequ
 ### Final dashboard product
 Here is a link to the final dashboard product:
 https://lookerstudio.google.com/reporting/694eaf63-3b28-491b-8957-aafcdfb1425c
+![Screenshot of pg 1](/pg1.png)
 
+![Screenshot of pg 2](/pg2.png)
 The first page contains monthly averages for different jobs and administrative units. This can be expanded with other models I created in SQL, to allow for other factors to be taken into account, such as administrative unit. Please use the dropdown menus to choose which Lv 1 Unit and Job Titles you want to compare.
 
 The second page contains demographic information per job title, which can be selected and compared using the dropdown menus.
