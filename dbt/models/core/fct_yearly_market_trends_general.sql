@@ -14,6 +14,7 @@ with gen_info as (
         jobtitle_en as jobtitle,
         count(*) as num_postings
     from {{ ref('fct_jobpostings') }}
+    where internal_external = "Internal/External"
     group by 1, 2, 3, 4, 5, 6
 )
 select

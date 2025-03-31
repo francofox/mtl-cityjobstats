@@ -12,6 +12,7 @@ with gen_info as (
         jobcode as jobcode,
         count(*) as num_postings
     from {{ ref('fct_jobpostings') }}
+    where internal_external = "Internal/External"
     group by 1, 2, 3, 4
 )
 
