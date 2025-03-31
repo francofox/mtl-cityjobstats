@@ -13,6 +13,7 @@ with num_of_applicants as (
         count(*) as total_jobs,
         avg(num_applying) as avg_appl_per_job
     from {{ ref('fct_jobpostings') }}
+    where internal_external = "Internal/External"
     group by 1, 2, 3, 4
 )
 select * from num_of_applicants
