@@ -1,11 +1,11 @@
 # Montreal City Job Stats (Statistiques de postulation des offres d'emploi de la Ville de Montréal)
-This project uses the data from the [Montréal Open Data site (Données ouvertes de la Ville de Montréal)](https://donnees.montreal.ca) on their SimenLigne Oracle job posting system. This data is available here:
+This project uses the data from the [Montréal Open Data site (Données ouvertes de la Ville de Montréal)](https://donnees.montreal.ca) on their SimenLigne job posting system. This data is available here:
 https://donnees.montreal.ca/dataset/offres-demploi-et-postulation
 
 This project is a capstone project in the [DataTalksClub](https://datatalks.club/) free [Data Engineering Zoomcamp](https://github.com/DataTalksClub/data-engineering-zoomcamp). A huge thank you to all of the contributors to this course. It is really insane that this sort of high-quality resource can be offered free of charge to the general public.
 
 ### Problem this solves
-This data contains almost all of the data of job postings and their applicants for jobs at the City of Montreal Government. This is one of the main employers in Montreal, and is reputed for the stability, pay, and benefits afforded to its employees, as well as the upward and sideways mobility possible within the organization. For this reason, City jobs are highly coveted and competitive. If one would like to build their career at the City, any and all information on the availability of and competition for different jobs is very useful.
+This data contains almost all of the data of job postings and their applicants for jobs at the City of Montreal Government. This is one of the main employers in Montreal, and is reputed for the stability, pay, and benefits afforded to its employees, as well as the upward and sideways mobility possible within the organization. For this reason, City jobs are highly competitive. If one would like to build their career at the City, any and all information on the availability of and competition for different jobs is very useful.
 
 The analysis of this data will help to show which particular jobs are most frequently posted, have the most amount of competition, when City Government hiring is likely to be slowest vs most dynamic, and which jobs tend to have the highest amount of diversity in their applicants.
 
